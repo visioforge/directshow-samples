@@ -1,0 +1,13 @@
+
+#pragma once
+
+//// RTSP Filter Without FFMpeg Decode
+//// {990CC6D7-9472-4ee4-818A-07FD8146103F}
+//static const GUID CLSID_PushSourceFilter = 
+//{ 0x990cc6d7, 0x9472, 0x4ee4, { 0x81, 0x8a, 0x7, 0xfd, 0x81, 0x46, 0x10, 0x3f } };
+
+ //RTSP Filter With FFMpeg Decode
+// {EDB1A24C-4B0B-4c8d-AEE5-52231A062BB4}
+static const GUID CLSID_PushSourceFilter = 
+{ 0xedb1a24c, 0x4b0b, 0x4c8d, { 0xae, 0xe5, 0x52, 0x23, 0x1a, 0x6, 0x2b, 0xb4 } };
+
