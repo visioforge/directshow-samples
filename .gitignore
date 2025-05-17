@@ -53,3 +53,4 @@ CodeCoverage/
 TestResult.xml
 nunit-*.xml
 .vs/
+Interfaces/dotnet/_sign_and_push.cmd
