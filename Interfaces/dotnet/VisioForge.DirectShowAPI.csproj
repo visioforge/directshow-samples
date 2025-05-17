@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>9.0</LangVersion>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>VisioForge DirectShow Filters API</Title>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>VisioForge.DirectShowAPI.snk</AssemblyOriginatorKeyFile>
+		<Version>2025.5.1</Version>
+		<Authors>VisioForge</Authors>
+		<Description>Shared DirectShow API for all VisioForge DirectShow products</Description>
+		<Copyright>VisioForge</Copyright>
+		<PackageProjectUrl>http://www.visioforge.com</PackageProjectUrl>
+		<PackageIcon>nuget.png</PackageIcon>
+		<PackageReadmeFile>readme.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/visioforge/directshow-samples</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>visioforge;directshow;video;audio;screen;media;capture;virtual camera;encoder;decoder;mp4;mp3</PackageTags>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MediaFoundationCore" Version="3.1.2" />
+		<PackageReference Include="System.Drawing.Common" Version="9.0.5" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="nuget.png">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	  <None Update="readme.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	</ItemGroup>
+
+</Project>
