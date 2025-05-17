@@ -1,8 +1,22 @@
-﻿namespace VisioForge.DirectShowAPI
-{
-    using System;
-    using System.Runtime.InteropServices;
+﻿// ***********************************************************************
+// Assembly         : VisioForge.Core
+// Author           : Roman
+// Created          : 02-21-2024
+//
+// Last Modified By : Roman
+// Last Modified On : 02-21-2024
+// ***********************************************************************
+// <copyright file="IFFmpegSourceSettings.cs" company="VisioForge">
+//     Copyright (c) 2025. All rights reserved.
+// </copyright>
+// <summary></summary>
+// ***********************************************************************
 
+using System;
+using System.Runtime.InteropServices;
+
+namespace VisioForge.DirectShowAPI
+{
     /// <summary>
     /// Enum FFMPEG_SOURCE_BUFFERING_MODE
     /// </summary>
@@ -12,10 +26,12 @@
         /// The ffmpeg source buffering mode automatic
         /// </summary>
         FFMPEG_SOURCE_BUFFERING_MODE_AUTO,
+
         /// <summary>
         /// The ffmpeg source buffering mode on
         /// </summary>
         FFMPEG_SOURCE_BUFFERING_MODE_ON,
+
         /// <summary>
         /// The ffmpeg source buffering mode off
         /// </summary>
@@ -31,7 +47,56 @@
     /// <param name="startTime">The start time.</param>
     /// <param name="stopTime">The stop time.</param>
     /// <returns>System.Int32.</returns>
-    internal delegate int FFMPEGDataCallbackDelegate([In] IntPtr buffer, int bufferSize, int dataType, long startTime, long stopTime);
+    public delegate int FFMPEGDataCallbackDelegate([In] IntPtr buffer, int bufferSize, int dataType, long startTime, long stopTime);
+
+    /// <summary>
+    /// Delegate FFMPEGTimestampCallbackDelegate
+    /// </summary>
+    /// <param name="mediaType">Type of the media.</param>
+    /// <param name="pts">The PTS.</param>
+    /// <returns>System.Int32.</returns>
+    public delegate int FFMPEGTimestampCallbackDelegate(FFMPEGSourceMediaType mediaType, Int64 demuxerStartTime, Int64 streamStartTimr, Int64 timestamp);
+
+    /// <summary>
+    /// Specifies the type of media stream in the FFmpeg source.
+    /// </summary>
+    public enum FFMPEGSourceMediaType
+    {
+        /// <summary>
+        /// Unknown media type.
+        /// </summary>
+        Unknown = -1,
+
+        /// <summary>
+        /// Video stream.
+        /// </summary>
+        Video,
+
+        /// <summary>
+        /// Audio stream.
+        /// </summary>
+        Audio,
+
+        /// <summary>
+        /// Data stream.
+        /// </summary>
+        Data,
+
+        /// <summary>
+        /// Subtitle stream.
+        /// </summary>
+        Subtitle,
+
+        /// <summary>
+        /// Attachment stream.
+        /// </summary>
+        Attachment,
+
+        /// <summary>
+        /// Number of media types (used internally).
+        /// </summary>
+        NB
+    };
 
     /// <summary>
     /// Interface IFFMPEGSourceSettings
@@ -40,7 +105,7 @@
     [System.Security.SuppressUnmanagedCodeSecurity]
     [Guid("1974D893-83E4-4F89-9908-795C524CC17E")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    internal interface IFFMPEGSourceSettings
+    public interface IFFMPEGSourceSettings
     {
         /// <summary>
         /// Gets the hw acceleration enabled.
@@ -107,9 +172,25 @@
         /// <summary>
         /// Sets callback for data buffer.
         /// </summary>
-        /// <param name="Callback">Callback pointer.</param>
+        /// <param name="callback">Callback pointer.</param>
         /// <returns>Returns 0 if the operation has been successful.</returns>
         [PreserveSig]
         int SetDataCallback([MarshalAs(UnmanagedType.FunctionPtr)] FFMPEGDataCallbackDelegate callback);
+
+        /// <summary>
+        /// Sets callback for data buffer.
+        /// </summary>
+        /// <param name="callback">Callback pointer.</param>
+        /// <returns>Returns 0 if the operation has been successful.</returns>
+        [PreserveSig]
+        int SetTimestampCallback([MarshalAs(UnmanagedType.FunctionPtr)] FFMPEGTimestampCallbackDelegate callback);
+
+        /// <summary>
+        /// Sets the audio enabled.
+        /// </summary>
+        /// <param name="enabled">The enabled.</param>
+        /// <returns>HRESULT .</returns>
+        [PreserveSig]
+        int SetAudioEnabled([MarshalAs(UnmanagedType.Bool)] bool enabled);
     }
 }

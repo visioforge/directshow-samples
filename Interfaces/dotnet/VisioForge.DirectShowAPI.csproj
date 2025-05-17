@@ -7,7 +7,7 @@
 		<Title>VisioForge DirectShow Filters API</Title>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>VisioForge.DirectShowAPI.snk</AssemblyOriginatorKeyFile>
-		<Version>2025.5.1</Version>
+		<Version>2025.5.3</Version>
 		<Authors>VisioForge</Authors>
 		<Description>Shared DirectShow API for all VisioForge DirectShow products</Description>
 		<Copyright>VisioForge</Copyright>

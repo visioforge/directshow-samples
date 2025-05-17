@@ -124,14 +124,9 @@ namespace VisioForge.DirectShowAPI
         public static readonly Guid CLSID_VFIPHTTPSource = new Guid("4ea6930a-2c8a-4ae6-a561-56e4b5044437");
 
         /// <summary>
-        /// IP HTTP FFMPEG source filter CLSID.
-        /// </summary>
-        public static readonly Guid CLSID_VFIPHTTPFFMPEGSource = new Guid("1269EA71-85DB-40c6-AD87-35AD707C821C");
-
-        /// <summary>
         /// FFMPEG source filter CLSID.
         /// </summary>
-        public static readonly Guid CLSID_VFFFMPEGSource = new Guid("F15FF9D9-F69A-43E6-92F7-13268D10F938");
+        public static readonly Guid CLSID_VFFFMPEGSource = new Guid("C5255DE3-50A7-4714-B763-D99E96E4CD52");
 
         /// <summary>
         /// VLC source filter CLSID.
@@ -142,11 +137,6 @@ namespace VisioForge.DirectShowAPI
         /// RTSP source filter CLSID.
         /// </summary>
         public static readonly Guid CLSID_VFRTSPSource = new Guid("990CC6D7-9472-4ee4-818A-07FD8146103F");
-
-        /// <summary>
-        /// RTSP FFMPEG source filter CLSID.
-        /// </summary>
-        public static readonly Guid CLSID_VFRTSPFFMPEGSource = new Guid("EDB1A24C-4B0B-4c8d-AEE5-52231A062BB4");
 
         /// <summary>
         /// Audio effect filter v4 CLSID.

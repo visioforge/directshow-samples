@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.393,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VFVCDXTypes.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.378,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VCGDIPAPI.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.426,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VFVCWMF9.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.696,=C:\Users\Roman\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.371,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VFVCDirectShow9.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.622,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VideoCaptureTypes.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.357,C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VCSimpleXML.pas=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.053,C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\Unit2.pas=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VirtualCameraIntf.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.386,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.171,C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VFVCWMF9.pas=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.052,C:\Users\Roman\Documents\RAD Studio\Projects\Project1.dproj=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\Virtual_Camera_Demo.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.437,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VCSimpleXML.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.461,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VCVUMeter.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.181,C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VCVUMeter.pas=</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.300,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VFVCDirectDraw.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.280,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VFVCDirect3D9.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.230,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VCClasses.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.261,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VCFiltersAPI.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.399,=C:\Users\Roman\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.309,=C:\Users\Roman\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.583,C:\Users\Roman\Documents\RAD Studio\Projects\Unit1.pas=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.420,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VCGDIPOBJ.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.385,=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\VFVCDirectSound.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.583,C:\Users\Roman\Documents\RAD Studio\Projects\Unit1.dfm=C:\Projects\_Projects\DirectShowSDK\VirtualCamera\_Demos\Delphi\Unit1.dfm</Transaction>
+  </Transactions>
+</BorlandProject>

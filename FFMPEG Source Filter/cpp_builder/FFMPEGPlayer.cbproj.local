@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.474,=C:\Users\Roman\Documents\Embarcadero\Studio\Projects\Unit1.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.396,C:\Users\Roman\Documents\Embarcadero\Studio\Projects\Unit1.cpp=C:\Projects\_Projects\DirectShowSDK\FFMPEGSourceFilter\_SOURCE\Demos\C++ Builder\Unit1.cpp</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.405,C:\Users\Roman\Documents\Embarcadero\Studio\Projects\Project1.cbproj=C:\Projects\_Projects\DirectShowSDK\FFMPEGSourceFilter\_SOURCE\Demos\C++ Builder\FFMPEGPlayer.cbproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.396,C:\Users\Roman\Documents\Embarcadero\Studio\Projects\Unit1.dfm=C:\Projects\_Projects\DirectShowSDK\FFMPEGSourceFilter\_SOURCE\Demos\C++ Builder\Unit1.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.423,=C:\Users\Roman\Documents\Embarcadero\Studio\Projects\Project1PCH1.h</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.389,C:\Users\Roman\Documents\Embarcadero\Studio\Projects\Project1PCH1.h=C:\Projects\_Projects\DirectShowSDK\FFMPEGSourceFilter\_SOURCE\Demos\C++ Builder\FFMPEGPlayerPCH1.h</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.396,C:\Users\Roman\Documents\Embarcadero\Studio\Projects\Unit1.h=C:\Projects\_Projects\DirectShowSDK\FFMPEGSourceFilter\_SOURCE\Demos\C++ Builder\Unit1.h</Transaction>
+    <Transaction>2024.05.10 14:47:59.449,=C:\Projects\_Projects\DirectShowSDK\FFMPEGSourceFilter\_SOURCE\Demos\C++ Builder\IFFmpegSourceSettings.h</Transaction>
+  </Transactions>
+</BorlandProject>
