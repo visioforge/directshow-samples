@@ -16,9 +16,13 @@ enum FFMPEG_SOURCE_BUFFERING_MODE {
 	FFMPEG_SOURCE_BUFFERING_MODE_OFF
 };
 
-//Callback Interface
+// Data callback Interface
 typedef HRESULT(_stdcall* FFMPEGDataCallbackDelegate) (
 	BYTE* buffer, int bufferLen, int dataType, LONGLONG startTime, LONGLONG stopTime);
+
+// Timestamp callback Interface
+typedef HRESULT(_stdcall* FFMPEGTimestampCallbackDelegate) (
+	int mediaType, __int64 demuxerStartTime, __int64 streamStartTimr, __int64 timestamp);
 
 MIDL_INTERFACE("1974D893-83E4-4F89-9908-795C524CC17E")
 IFFmpegSourceSettings : IUnknown
@@ -79,6 +83,20 @@ IFFmpegSourceSettings : IUnknown
 	/// <param name="callback">The callback.</param>
 	/// <returns>HRESULT .</returns>
 	STDMETHOD(SetDataCallback) (FFMPEGDataCallbackDelegate callback) = 0;
+
+	/// <summary>
+	/// Sets the timestamp callback.
+	/// </summary>
+	/// <param name="callback">The callback.</param>
+	/// <returns>HRESULT .</returns>
+	STDMETHOD(SetTimestampCallback) (FFMPEGTimestampCallbackDelegate callback) = 0;
+	
+	/// <summary>
+	/// Sets the audio enabled.
+	/// </summary>
+	/// <param name="enabled">The enabled.</param>
+	/// <returns>HRESULT .</returns>
+	STDMETHOD(SetAudioEnabled) (BOOL enabled) = 0;
 };
 
 _COM_SMARTPTR_TYPEDEF(IFFmpegSourceSettings, __uuidof(IFFmpegSourceSettings));
