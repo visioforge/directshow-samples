@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>VLC_Source_Demo</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+    <Platforms>x64;x86</Platforms>
+    <MyType>WindowsForms</MyType>
+    <StartupObject>VLC_Source_Demo.VLC_Source_Demo.Module1</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="VisioForge.DirectShowAPI" Version="2025.5.3" />
+  </ItemGroup>
+</Project> 
