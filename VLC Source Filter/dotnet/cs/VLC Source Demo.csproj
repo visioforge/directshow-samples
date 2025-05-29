@@ -9,6 +9,6 @@
     <Platforms>x64;x86</Platforms>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="VisioForge.DirectShowAPI" Version="2025.5.3" />
+    <PackageReference Include="VisioForge.DirectShowAPI" Version="2025.5.4" />
   </ItemGroup>
 </Project>

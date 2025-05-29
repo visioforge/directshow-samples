@@ -11,6 +11,6 @@
     <StartupObject>VLC_Source_Demo.VLC_Source_Demo.Module1</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="VisioForge.DirectShowAPI" Version="2025.5.3" />
+    <PackageReference Include="VisioForge.DirectShowAPI" Version="2025.5.4" />
   </ItemGroup>
 </Project> 
