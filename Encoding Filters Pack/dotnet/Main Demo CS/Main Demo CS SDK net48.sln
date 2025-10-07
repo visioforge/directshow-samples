@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36518.9 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Main Demo CS SDK net48", "Main Demo CS SDK net48.csproj", "{06127071-7E96-7351-DB7A-6DA54228D0F9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{06127071-7E96-7351-DB7A-6DA54228D0F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06127071-7E96-7351-DB7A-6DA54228D0F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06127071-7E96-7351-DB7A-6DA54228D0F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06127071-7E96-7351-DB7A-6DA54228D0F9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0C412EDD-924B-47DC-AC12-B5E6D81D1378}
+	EndGlobalSection
+EndGlobal
