@@ -9,3 +9,4 @@ This repository contains sample projects for the VisioForge SDKs. The samples ar
 - [Processing Filters Pack](https://www.visioforge.com/processing-filters-pack)
 - [FFMPEG Source Filter](https://www.visioforge.com/ffmpeg-source-directshow-filter)
 - [Encoding Filters Pack](https://www.visioforge.com/encoding-filters-pack)
+- [Video Encryption SDK](https://www.visioforge.com/video-encryption-sdk)
