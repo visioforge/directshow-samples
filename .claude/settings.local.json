@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Projects/_Projects/MediaFrameworkDotNet/_SOURCE/HELP/directshow/**)",
+      "Read(//c/Projects/_Projects/MediaFrameworkDotNet/_SOURCE/HELP/**)",
+      "Bash(retype start:*)",
+      "Read(//c/Projects/_Projects/DirectShowSDK/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

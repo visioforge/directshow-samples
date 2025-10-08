@@ -7,7 +7,7 @@
 		<Title>VisioForge DirectShow Filters API</Title>
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>VisioForge.DirectShowAPI.snk</AssemblyOriginatorKeyFile>
-		<Version>2025.5.4</Version>
+		<Version>2025.10.0</Version>
 		<Authors>VisioForge</Authors>
 		<Description>Shared DirectShow API for all VisioForge DirectShow products</Description>
 		<Copyright>VisioForge</Copyright>
@@ -22,7 +22,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="MediaFoundationCore" Version="3.1.2" />
-		<PackageReference Include="System.Drawing.Common" Version="9.0.5" />
+		<PackageReference Include="System.Drawing.Common" Version="9.0.9" />
 	</ItemGroup>
 
 	<ItemGroup>

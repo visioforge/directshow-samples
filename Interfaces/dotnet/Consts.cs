@@ -163,6 +163,26 @@ namespace VisioForge.DirectShowAPI
         /// </summary>
         public static readonly Guid CLSID_VFAudioMixerFilter = new Guid("207FEF9F-D6C1-40CF-AEC4-0AEC61F30BEA");
 
+        /// <summary>
+        /// Video encryptor filter CLSID (v8).
+        /// </summary>  
+        public const string CLSID_VFVideoEncryptor8 = "F1D3727A-88DE-49AB-A635-280BEFEFF902";
+
+        /// <summary>
+        /// Video decryptor filter CLSID (v8).
+        /// </summary>  
+        public const string CLSID_VFVideoDecryptor8 = "D2C761F0-9988-4F79-9B0E-FB2B79C65851";
+
+        /// <summary>
+        /// Video encryptor filter CLSID (v9).
+        /// </summary>  
+        public const string CLSID_VFVideoEncryptor9 = "86D83D2E-70D2-4A32-B7BE-E94A08AA7BAA";
+
+        /// <summary>
+        /// Video decryptor filter CLSID (v9).
+        /// </summary>  
+        public const string CLSID_VFVideoDecryptor9 = "4B89F5E2-2BA9-4C8F-A78A-EA2701AB582C";
+
         // ReSharper restore InconsistentNaming
     }
 }
