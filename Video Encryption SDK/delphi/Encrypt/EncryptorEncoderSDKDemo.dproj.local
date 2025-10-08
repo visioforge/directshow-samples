@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.312,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Encrypt\ENCGDIPOBJ.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.158,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Encrypt\ENCDirect3D9.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.204,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Encrypt\ENCDirectShow9.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.028,C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack\EncryptorSDKDemo.dproj=C:\Users\Roman\Documents\RAD Studio\Projects\EncryptorSDKDemo.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.186,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Encrypt\ENCDirectDraw.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.775,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.270,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Encrypt\ENCGDIPAPI.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.199,=C:\Users\Roman\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.283,C:\Users\Roman\Documents\RAD Studio\Projects\EncryptorSDKDemo.dproj=C:\Users\Roman\Documents\RAD Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.346,C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack\Unit1.dfm=C:\Users\Roman\Documents\RAD Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.337,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Encrypt\ENCWMF9.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.223,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Encrypt\ENCDirectSound.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.346,C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack\Unit1.pas=C:\Users\Roman\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.470,C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack - Encrypt\EncryptorSDKDemo.dproj=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack - Encrypt\EncryptorEncoderSDKDemo.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.742,C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack\encryptor_intf.pas=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.249,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Encrypt\ENCDXTypes.pas</Transaction>
+    <Transaction>2024.04.08 22:53:14.940,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi\Encrypt\helpers.pas</Transaction>
+  </Transactions>
+</BorlandProject>

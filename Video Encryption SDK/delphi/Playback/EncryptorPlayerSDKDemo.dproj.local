@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.199,=C:\Users\Roman\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.028,C:\Users\Roman\Documents\RAD Studio\Projects\EncryptorSDKDemo.dproj=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack\EncryptorSDKDemo.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.346,C:\Users\Roman\Documents\RAD Studio\Projects\Unit1.dfm=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack\Unit1.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.937,C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack - Playback\EncryptorPlayerSDKDemo.dproj=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack - Playback\EncryptorSDKDemo.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.742,C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack\Unit2.pas=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack\encryptor_intf.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.775,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack\Unit2.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.346,C:\Users\Roman\Documents\RAD Studio\Projects\Unit1.pas=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_DEMOS\Delphi - DSPack\Unit1.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.283,C:\Users\Roman\Documents\RAD Studio\Projects\Project1.dproj=C:\Users\Roman\Documents\RAD Studio\Projects\EncryptorSDKDemo.dproj</Transaction>
+    <Transaction>2024.04.04 15:34:52.343,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\ENCDirect3D9.pas</Transaction>
+    <Transaction>2024.04.04 15:34:52.374,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\ENCDirectDraw.pas</Transaction>
+    <Transaction>2024.04.04 15:34:52.415,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\ENCDirectShow9.pas</Transaction>
+    <Transaction>2024.04.04 15:34:52.446,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\ENCDirectSound.pas</Transaction>
+    <Transaction>2024.04.04 15:34:52.460,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\ENCDXTypes.pas</Transaction>
+    <Transaction>2024.04.04 15:34:52.481,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\ENCGDIPAPI.pas</Transaction>
+    <Transaction>2024.04.04 15:34:52.514,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\ENCGDIPOBJ.pas</Transaction>
+    <Transaction>2024.04.04 15:34:52.541,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\ENCWMF9.pas</Transaction>
+    <Transaction>2024.04.04 15:37:41.264,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\ENCDSPack.pas</Transaction>
+    <Transaction>2024.04.04 15:39:45.075,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\ENCDXSUtil.pas</Transaction>
+    <Transaction>2024.04.04 15:54:14.514,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\ENCDxDiag.pas</Transaction>
+    <Transaction>2024.04.04 16:04:22.552,C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\ENCDSPack.pas=</Transaction>
+    <Transaction>2024.04.04 16:04:23.882,C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\ENCDxDiag.pas=</Transaction>
+    <Transaction>2024.04.04 16:40:32.936,=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\Unit2.pas</Transaction>
+    <Transaction>2024.04.04 16:40:41.141,C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\DirectShowPlayer.pas=C:\Projects\_Projects\DirectShowSDK\VideoEncryptor\_SETUP\FILES\Demos\Delphi\Playback\Unit2.pas</Transaction>
+  </Transactions>
+</BorlandProject>
