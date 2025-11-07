@@ -25,7 +25,7 @@ namespace VisioForge.DirectShowAPI
     [System.Security.SuppressUnmanagedCodeSecurity]
     [Guid("77493EB7-6D00-41C5-9535-7C593824E892")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    internal interface IVlcSrc
+    public interface IVlcSrc
     {
         /// <summary>
         /// Sets the file.
@@ -119,7 +119,7 @@ namespace VisioForge.DirectShowAPI
     [System.Security.SuppressUnmanagedCodeSecurity]
     [Guid("CCE122C0-172C-4626-B4B6-42B039E541CB")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    internal interface IVlcSrc2 : IVlcSrc
+    public interface IVlcSrc2 : IVlcSrc
     {
         /// <summary>
         /// Sets the file.
@@ -229,7 +229,7 @@ namespace VisioForge.DirectShowAPI
     [System.Security.SuppressUnmanagedCodeSecurity]
     [Guid("3DFBED0C-E4A8-401C-93EF-CBBFB65223DD")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    internal interface IVlcSrc3 : IVlcSrc2
+    public interface IVlcSrc3 : IVlcSrc2
     {
         /// <summary>
         /// Sets the file.
