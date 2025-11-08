@@ -80,6 +80,7 @@ namespace VLC_Source_Demo
             pnScreen.Name = "pnScreen";
             pnScreen.Size = new System.Drawing.Size(912, 825);
             pnScreen.TabIndex = 3;
+            pnScreen.Resize += pnScreen_Resize;
             // 
             // btStop
             // 

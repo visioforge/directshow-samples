@@ -39,6 +39,8 @@ namespace VLC_Source_Demo
 
         private IBaseFilter videoRenderer;
 
+        private IMFVideoDisplayControl videoDisplayControl;
+
         public Form1()
         {
             InitializeComponent();
@@ -184,13 +186,10 @@ namespace VLC_Source_Demo
                 out var videoDisplayControlObj);
             if (videoDisplayControlObj != null)
             {
-                var dsMFVideoDisplayControl = videoDisplayControlObj as IMFVideoDisplayControl;
-                dsMFVideoDisplayControl?.SetVideoWindow(this.pnScreen.Handle);
+                videoDisplayControl = videoDisplayControlObj as IMFVideoDisplayControl;
+                videoDisplayControl?.SetVideoWindow(this.pnScreen.Handle);
 
-                var rectSrc = new MFVideoNormalizedRect(0, 0, 1, 1);
-                var rectDest = new MFRect(0, 0, pnScreen.Width, pnScreen.Height);
-
-                dsMFVideoDisplayControl.SetVideoPosition(rectSrc, rectDest);
+                ResizeVideoRenderer();
             }
             else
             {
@@ -203,6 +202,17 @@ namespace VLC_Source_Demo
 
             hr = captureGraph.RenderStream(null, MediaType.Audio, sourceFilter, null, null);
             //DsError.ThrowExceptionForHR(hr);
+        }
+
+        private void ResizeVideoRenderer()
+        {
+            if (videoDisplayControl != null)
+            {
+                var rectSrc = new MFVideoNormalizedRect(0, 0, 1, 1);
+                var rectDest = new MFRect(0, 0, pnScreen.Width, pnScreen.Height);
+
+                videoDisplayControl.SetVideoPosition(rectSrc, rectDest);
+            }
         }
 
         private void btStart_Click(object sender, EventArgs e)
@@ -266,6 +276,12 @@ namespace VLC_Source_Demo
                 {
                     Marshal.ReleaseComObject(videoWindow);
                     videoWindow = null;
+                }
+
+                if (videoDisplayControl != null)
+                {
+                    Marshal.ReleaseComObject(videoDisplayControl);
+                    videoDisplayControl = null;
                 }
 
                 Marshal.ReleaseComObject(filterGraph);
@@ -436,6 +452,11 @@ namespace VLC_Source_Demo
             {
                 edFilename.Text = openFileDialog1.FileName;
             }
+        }
+
+        private void pnScreen_Resize(object sender, EventArgs e)
+        {
+            ResizeVideoRenderer();
         }
     }
 }
