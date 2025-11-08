@@ -8,6 +8,8 @@ namespace VLC_Source_Demo
     using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading;
+    using System.Collections.Generic;
+    using System.Linq;
 
     using MediaFoundation;
     using MediaFoundation.EVR;
@@ -68,12 +70,84 @@ namespace VLC_Source_Demo
                 return false;
             }
 
+            // Set custom command-line parameters if enabled
+            if (cbUseCustomParams.Checked)
+            {
+                SetCustomCommandLineParameters();
+            }
+
             // load file / network stream
             var sourceFilterIntf = sourceFilter as IFileSourceFilter;
             int hr = sourceFilterIntf.Load(edFilename.Text, null);
             DsError.ThrowExceptionForHR(hr);
 
             return true;
+        }
+
+        private void SetCustomCommandLineParameters()
+        {
+            // Try to get IVlcSrc3 interface first (latest), fallback to IVlcSrc2
+            var vlcSrc3 = sourceFilter as IVlcSrc3;
+            var vlcSrc2 = sourceFilter as IVlcSrc2;
+
+            if (vlcSrc3 == null && vlcSrc2 == null)
+            {
+                MessageBox.Show(this, "VLC Source filter does not support custom command line parameters (IVlcSrc2/IVlcSrc3 interface not found).");
+                return;
+            }
+
+            // Parse parameters from the text box
+            var parametersText = edCustomParams.Text;
+            if (string.IsNullOrWhiteSpace(parametersText))
+            {
+                return;
+            }
+
+            // Split by newlines and spaces, filter out empty entries
+            var parameters = parametersText
+                .Split(new[] { '\r', '\n', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .Select(p => p.Trim())
+                .ToList();
+
+            if (parameters.Count == 0)
+            {
+                return;
+            }
+
+            // Allocate native UTF-8 strings
+            var nativeStrings = new IntPtr[parameters.Count];
+            try
+            {
+                for (int i = 0; i < parameters.Count; i++)
+                {
+                    nativeStrings[i] = StringHelper.NativeUtf8FromString(parameters[i]);
+                }
+
+                // Call SetCustomCommandLine
+                int hr;
+                if (vlcSrc3 != null)
+                {
+                    hr = vlcSrc3.SetCustomCommandLine(nativeStrings, parameters.Count);
+                }
+                else
+                {
+                    hr = vlcSrc2.SetCustomCommandLine(nativeStrings, parameters.Count);
+                }
+
+                if (hr != 0)
+                {
+                    MessageBox.Show(this, $"Failed to set custom VLC parameters. HRESULT: 0x{hr:X8}");
+                }
+            }
+            finally
+            {
+                // Free allocated native strings
+                foreach (var ptr in nativeStrings)
+                {
+                    StringHelper.FreeNativeUtf8(ptr);
+                }
+            }
         }
 
         private void AddVideoRenderer()
