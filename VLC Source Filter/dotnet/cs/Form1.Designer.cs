@@ -44,6 +44,9 @@ namespace VLC_Source_Demo
             tmProgress = new System.Windows.Forms.Timer(components);
             edFilename = new System.Windows.Forms.TextBox();
             openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            cbUseCustomParams = new System.Windows.Forms.CheckBox();
+            edCustomParams = new System.Windows.Forms.TextBox();
+            label2 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)tbSpeed).BeginInit();
             ((System.ComponentModel.ISupportInitialize)tbTimeline).BeginInit();
             SuspendLayout();
@@ -71,12 +74,14 @@ namespace VLC_Source_Demo
             // 
             // pnScreen
             // 
+            pnScreen.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             pnScreen.BackColor = System.Drawing.Color.Black;
             pnScreen.Location = new System.Drawing.Point(730, 17);
             pnScreen.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
             pnScreen.Name = "pnScreen";
             pnScreen.Size = new System.Drawing.Size(912, 825);
             pnScreen.TabIndex = 3;
+            pnScreen.Resize += pnScreen_Resize;
             // 
             // btStop
             // 
@@ -183,11 +188,46 @@ namespace VLC_Source_Demo
             // 
             openFileDialog1.FileName = "openFileDialog1";
             // 
+            // cbUseCustomParams
+            // 
+            cbUseCustomParams.AutoSize = true;
+            cbUseCustomParams.Location = new System.Drawing.Point(25, 254);
+            cbUseCustomParams.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+            cbUseCustomParams.Name = "cbUseCustomParams";
+            cbUseCustomParams.Size = new System.Drawing.Size(226, 29);
+            cbUseCustomParams.TabIndex = 20;
+            cbUseCustomParams.Text = "Use Custom Parameters";
+            cbUseCustomParams.UseVisualStyleBackColor = true;
+            // 
+            // edCustomParams
+            // 
+            edCustomParams.Location = new System.Drawing.Point(25, 326);
+            edCustomParams.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
+            edCustomParams.Multiline = true;
+            edCustomParams.Name = "edCustomParams";
+            edCustomParams.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            edCustomParams.Size = new System.Drawing.Size(673, 150);
+            edCustomParams.TabIndex = 22;
+            edCustomParams.Text = "--no-video-title-show\r\n--clock-jitter=0\r\n--network-caching=300\r\n";
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new System.Drawing.Point(25, 295);
+            label2.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            label2.Name = "label2";
+            label2.Size = new System.Drawing.Size(469, 25);
+            label2.TabIndex = 21;
+            label2.Text = "Custom VLC Parameters (one per line or space-separated):";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(10F, 25F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1662, 865);
+            Controls.Add(edCustomParams);
+            Controls.Add(label2);
+            Controls.Add(cbUseCustomParams);
             Controls.Add(btStop);
             Controls.Add(btPause);
             Controls.Add(btResume);
@@ -226,6 +266,9 @@ namespace VLC_Source_Demo
         private System.Windows.Forms.Timer tmProgress;
         private System.Windows.Forms.TextBox edFilename;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.CheckBox cbUseCustomParams;
+        private System.Windows.Forms.TextBox edCustomParams;
+        private System.Windows.Forms.Label label2;
     }
 }
 
