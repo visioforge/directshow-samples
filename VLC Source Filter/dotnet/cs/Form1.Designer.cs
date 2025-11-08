@@ -197,16 +197,6 @@ namespace VLC_Source_Demo
             cbUseCustomParams.Text = "Use Custom Parameters";
             cbUseCustomParams.UseVisualStyleBackColor = true;
             // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Location = new System.Drawing.Point(25, 295);
-            label2.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
-            label2.Name = "label2";
-            label2.Size = new System.Drawing.Size(372, 25);
-            label2.TabIndex = 21;
-            label2.Text = "Custom VLC Parameters (one per line or space-separated):";
-            // 
             // edCustomParams
             // 
             edCustomParams.Location = new System.Drawing.Point(25, 326);
@@ -216,7 +206,17 @@ namespace VLC_Source_Demo
             edCustomParams.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             edCustomParams.Size = new System.Drawing.Size(673, 150);
             edCustomParams.TabIndex = 22;
-            edCustomParams.Text = "--no-video-title-show\r\n--clock-jitter=0\r\n--sout-mux-caching=0\r\n--no-sout-display-audio";
+            edCustomParams.Text = "--no-video-title-show\r\n--clock-jitter=0\r\n--network-caching=300\r\n";
+            // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new System.Drawing.Point(25, 295);
+            label2.Margin = new System.Windows.Forms.Padding(5, 0, 5, 0);
+            label2.Name = "label2";
+            label2.Size = new System.Drawing.Size(469, 25);
+            label2.TabIndex = 21;
+            label2.Text = "Custom VLC Parameters (one per line or space-separated):";
             // 
             // Form1
             // 
