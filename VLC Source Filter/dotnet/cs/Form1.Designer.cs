@@ -74,6 +74,7 @@ namespace VLC_Source_Demo
             // 
             // pnScreen
             // 
+            pnScreen.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             pnScreen.BackColor = System.Drawing.Color.Black;
             pnScreen.Location = new System.Drawing.Point(730, 17);
             pnScreen.Margin = new System.Windows.Forms.Padding(5, 6, 5, 6);
