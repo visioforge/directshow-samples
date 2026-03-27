@@ -1,0 +1,63 @@
+// Microsoft Visual C++ generated resource script.
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+#include "afxres.h"
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAINDLG DIALOGEX 0, 0, 740, 340
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "VisioForge Virtual Camera - MFC Demo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    // ============ Left panel: Source (webcam -> virtual camera) ============
+    GROUPBOX        "Source (Webcam -> Virtual Camera)", IDC_STATIC, 7, 7, 356, 230
+    CONTROL         "", IDC_SOURCE_VIDEO_PANEL, "Static", SS_BLACKFRAME, 14, 18, 342, 192
+
+    LTEXT           "Device:", IDC_STATIC_SOURCE_DEVICE_LABEL, 14, 218, 28, 8
+    COMBOBOX        IDC_COMBO_SOURCE_DEVICE, 44, 216, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT           "Format:", IDC_STATIC_SOURCE_FORMAT_LABEL, 14, 238, 28, 8
+    COMBOBOX        IDC_COMBO_SOURCE_FORMAT, 44, 236, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT           "FPS:", IDC_STATIC_SOURCE_RATE_LABEL, 220, 238, 18, 8
+    COMBOBOX        IDC_COMBO_SOURCE_FRAMERATE, 240, 236, 50, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    PUSHBUTTON      "Start", IDC_BTN_SOURCE_START, 300, 216, 56, 14
+    PUSHBUTTON      "Stop", IDC_BTN_SOURCE_STOP, 300, 234, 56, 14, WS_DISABLED
+
+    // ============ Right panel: Camera (virtual camera preview/capture) ============
+    GROUPBOX        "Camera (Virtual Camera Output)", IDC_STATIC, 370, 7, 363, 230
+    CONTROL         "", IDC_CAMERA_VIDEO_PANEL, "Static", SS_BLACKFRAME, 377, 18, 349, 192
+
+    LTEXT           "Format:", IDC_STATIC_CAM_FORMAT_LABEL, 377, 218, 28, 8
+    COMBOBOX        IDC_COMBO_CAMERA_FORMAT, 407, 216, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT           "FPS:", IDC_STATIC_CAM_RATE_LABEL, 583, 218, 18, 8
+    COMBOBOX        IDC_COMBO_CAMERA_FRAMERATE, 603, 216, 50, 200, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT           "Output:", IDC_STATIC_OUTPUT_LABEL, 377, 238, 28, 8
+    EDITTEXT        IDC_EDIT_OUTPUT_FILE, 407, 236, 290, 14, ES_AUTOHSCROLL
+    PUSHBUTTON      "...", IDC_BTN_BROWSE, 700, 236, 20, 14
+
+    PUSHBUTTON      "Preview", IDC_BTN_CAMERA_PREVIEW, 660, 216, 36, 14
+    PUSHBUTTON      "Capture", IDC_BTN_CAMERA_CAPTURE, 700, 216, 33, 14
+    PUSHBUTTON      "Stop", IDC_BTN_CAMERA_STOP, 660, 253, 73, 14, WS_DISABLED
+
+    // ============ Status ============
+    LTEXT           "Status: Ready", IDC_STATIC_STATUS, 14, 324, 710, 10
+END
+
+#endif
