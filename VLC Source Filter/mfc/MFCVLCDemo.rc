@@ -1,0 +1,43 @@
+// Microsoft Visual C++ generated resource script.
+
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+#include "afxres.h"
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_MAINDLG DIALOGEX 0, 0, 480, 400
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "VisioForge VLC Source - MFC Demo"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "Video Preview", IDC_STATIC, 7, 7, 466, 280
+    CONTROL         "", IDC_VIDEO_PANEL, "Static", SS_BLACKFRAME, 14, 18, 452, 264
+
+    LTEXT           "File:", IDC_STATIC, 14, 298, 16, 8
+    EDITTEXT        IDC_EDIT_FILENAME, 34, 296, 394, 14, ES_AUTOHSCROLL
+    PUSHBUTTON      "...", IDC_BTN_BROWSE, 434, 295, 20, 14
+
+    CONTROL         "", IDC_SLIDER_TIMELINE, "msctls_trackbar32", TBS_BOTH | TBS_NOTICKS | WS_TABSTOP, 14, 318, 390, 16
+    LTEXT           "00:00:00 / 00:00:00", IDC_STATIC_TIME, 410, 321, 80, 8
+
+    PUSHBUTTON      "Start", IDC_BTN_START, 14, 344, 60, 24
+    PUSHBUTTON      "Pause", IDC_BTN_PAUSE, 80, 344, 60, 24, WS_DISABLED
+    PUSHBUTTON      "Resume", IDC_BTN_RESUME, 146, 344, 60, 24, WS_DISABLED
+    PUSHBUTTON      "Stop", IDC_BTN_STOP, 212, 344, 60, 24, WS_DISABLED
+
+    LTEXT           "Status: Ready", IDC_STATIC_STATUS, 14, 382, 440, 10
+END
+
+#endif

@@ -1,0 +1,11 @@
+//////////////////////////////////////////////////////
+// pch.h - Precompiled header
+//////////////////////////////////////////////////////
+#pragma once
+
+#include "targetver.h"
+
+#include <afxwin.h>
+#include <afxext.h>
+#include <afxcmn.h>
+#include <afxdialogex.h>
