@@ -13,7 +13,7 @@ type
   /// </summary>
   IVFVirtualCameraSink = interface(IUnknown)
     ['{A96631D2-4AC9-4F09-9F34-FF8229087DEB}']
-    function set_license(license: PAnsiChar): HRESULT; stdcall;
+    function set_license(license: PWideChar): HRESULT; stdcall;
   end;
 
 implementation
