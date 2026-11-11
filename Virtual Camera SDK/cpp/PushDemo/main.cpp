@@ -5,6 +5,8 @@
 // Usage: PushDemo.exe [license key]     Ctrl+C stops.
 
 #include <windows.h>
+#include <sddl.h>
+#pragma comment(lib, "advapi32.lib")
 #include <dshow.h>
 #include <timeapi.h>
 #pragma comment(lib, "winmm.lib")
@@ -82,6 +84,16 @@ static bool Lock(HANDLE mutex, DWORD timeoutMs = INFINITE)
     }
 }
 
+// Open to every process of the session at medium integrity: a camera consumer that is not elevated can then open
+// what an elevated producer creates.
+static SECURITY_ATTRIBUTES* SharedSecurity()
+{
+    static SECURITY_ATTRIBUTES sa = { sizeof(sa) };
+    if (!sa.lpSecurityDescriptor)
+        ConvertStringSecurityDescriptorToSecurityDescriptorW(L"D:(A;;GA;;;WD)S:(ML;;NW;;;ME)", SDDL_REVISION_1, &sa.lpSecurityDescriptor, nullptr);
+    return sa.lpSecurityDescriptor ? &sa : nullptr;
+}
+
 struct Producer
 {
     HANDLE producerMutex = nullptr;
@@ -127,21 +139,21 @@ struct Producer
         const ULONGLONG total = streamsOffset + (sizeof(STREAM_SHARED_DATA) + FRAME_SIZE) * SLOT_COUNT;
 
         // Owned for as long as this demo streams: a second PushDemo sees it taken and leaves the stream alone.
-        producerMutex = CreateMutexW(nullptr, TRUE, (name + L"Producer").c_str());
+        producerMutex = CreateMutexW(SharedSecurity(), TRUE, (name + L"Producer").c_str());
         if (producerMutex && GetLastError() == ERROR_ALREADY_EXISTS && !Lock(producerMutex, 0))
         {
             wprintf(L"Another PushDemo is streaming to %s.\n", name.c_str());
             return false;
         }
 
-        mutex = CreateMutexW(nullptr, FALSE, (name + L"Mutex").c_str());
+        mutex = CreateMutexW(SharedSecurity(), FALSE, (name + L"Mutex").c_str());
         if (!mutex)
         {
             wprintf(L"CreateMutex failed: %lu\n", GetLastError());
             return false;
         }
 
-        map = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, (DWORD)(total >> 32), (DWORD)total, name.c_str());
+        map = CreateFileMappingW(INVALID_HANDLE_VALUE, SharedSecurity(), PAGE_READWRITE, (DWORD)(total >> 32), (DWORD)total, name.c_str());
         const DWORD mapError = GetLastError();
         if (!map)
         {
@@ -182,7 +194,7 @@ struct Producer
         // The key goes into its own mapping "<name>License"; it stays alive while the handle is open.
         if (license && *license)
         {
-            licenseMap = CreateFileMappingW(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, LICENSE_MAX_CCH * sizeof(WCHAR), (name + L"License").c_str());
+            licenseMap = CreateFileMappingW(INVALID_HANDLE_VALUE, SharedSecurity(), PAGE_READWRITE, 0, LICENSE_MAX_CCH * sizeof(WCHAR), (name + L"License").c_str());
             WCHAR* view = licenseMap ? (WCHAR*)MapViewOfFile(licenseMap, FILE_MAP_WRITE, 0, 0, 0) : nullptr;
             if (view)
             {
@@ -212,7 +224,7 @@ struct Producer
 
         for (int i = 0; i < SLOT_COUNT; i++)
         {
-            slotMutex[i] = CreateMutexW(nullptr, FALSE, (name + L"MutexStream" + std::to_wstring(i)).c_str());
+            slotMutex[i] = CreateMutexW(SharedSecurity(), FALSE, (name + L"MutexStream" + std::to_wstring(i)).c_str());
             if (!slotMutex[i])
             {
                 wprintf(L"CreateMutex failed: %lu\n", GetLastError());
@@ -335,9 +347,10 @@ struct Producer
             return;
         }
 
-        // The reader takes only a slot stamped later than the last one it read: two frames in one tick need distinct stamps.
+        // The reader takes only a slot stamped later than the last one it read: two frames in one tick need distinct
+        // stamps. The tick count wraps after 49.7 days, so stamps are compared by their difference.
         const DWORD now = GetTickCount();
-        lastStamp = now > lastStamp ? now : lastStamp + 1;
+        lastStamp = lastStamp == 0 || (LONG)(now - lastStamp) > 0 ? now : lastStamp + 1;
 
         STREAM_SHARED_DATA* s = Slot(slot);
         s->llDataSize = FRAME_SIZE;
