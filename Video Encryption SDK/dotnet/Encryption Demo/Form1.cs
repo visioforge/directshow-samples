@@ -175,9 +175,6 @@ namespace Main_Demo
                 sourceAudioFilter,
                 audioCaptureDevices[cbAudioCaptureSource.SelectedIndex].Name);
 
-            // sinks
-            AddEncryptor();
-
             // Render the preview pin on the video capture filter
             // Use this instead of graphBuilder.RenderFile
             Guid CLSID_VFRGB2YUV = new Guid("3BDA461E-12DB-4C24-9815-B68D1AA4D34A"); // "VisioForge RGB2YUV"
@@ -189,8 +186,13 @@ namespace Main_Demo
                 return;
             }
 
+            // Decode the video into RGB2YUV before the encoders join the graph,
+            // so the decoder chain never routes through the H264 encoder
             hr = captureGraphSource.RenderStream(null, null, sourceVideoFilter, null, rgb2yuvFilter);
             DsError.ThrowExceptionForHR(hr);
+
+            // sinks
+            AddEncryptor();
 
             hr = captureGraphSource.RenderStream(null, null, rgb2yuvFilter, videoEncFilter, muxFilter);
             DsError.ThrowExceptionForHR(hr);
@@ -299,12 +301,6 @@ namespace Main_Demo
                 }
                 else if (rbEncryptionKeyFile.Checked)
                 {
-                    if (!File.Exists(edEncryptionKeyFile.Text))
-                    {
-                        MessageBox.Show(this, "Unable to open file key for encryptor.");
-                        return;
-                    }
-
                     cryptoConfig.ApplyFile(edEncryptionKeyFile.Text);
                 }
                 else
@@ -672,6 +668,12 @@ namespace Main_Demo
 
         private void btSourceStart_Click(object sender, EventArgs e)
         {
+            if (rbEncryptionKeyFile.Checked && !File.Exists(edEncryptionKeyFile.Text))
+            {
+                MessageBox.Show(this, "Unable to open file key for encryptor.");
+                return;
+            }
+
             btSourceStart.Enabled = false;
             btSourceStop.Enabled = true;
 
