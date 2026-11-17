@@ -202,12 +202,6 @@ namespace Player_Demo
                 }
                 else if (rbEncryptionKeyFile.Checked)
                 {
-                    if (!File.Exists(edEncryptionKeyFile.Text))
-                    {
-                        MessageBox.Show(this, "Unable to open file key for encryptor.");
-                        return;
-                    }
-
                     cryptoConfig.ApplyFile(edEncryptionKeyFile.Text);
                 }
                 else
@@ -247,7 +241,11 @@ namespace Player_Demo
             DsError.ThrowExceptionForHR(hr);
 
             // Audio goes to the default sound device; a file without audio is fine
-            captureGraph.RenderStream(null, MediaType.Audio, decryptor, null, null);
+            if (FilterHelper.GetFreePinWithMediaType(decryptor, PinDirection.Output, MediaType.Audio) != null)
+            {
+                hr = captureGraph.RenderStream(null, MediaType.Audio, decryptor, null, null);
+                DsError.ThrowExceptionForHR(hr);
+            }
 
             UpdateVdeoWindow();
 
@@ -286,6 +284,12 @@ namespace Player_Demo
 
         private void btSourceStart_Click(object sender, EventArgs e)
         {
+            if (rbEncryptionKeyFile.Checked && !File.Exists(edEncryptionKeyFile.Text))
+            {
+                MessageBox.Show(this, "Unable to open file key for encryptor.");
+                return;
+            }
+
             btSourceStart.Enabled = false;
             btSourceStop.Enabled = true;
 

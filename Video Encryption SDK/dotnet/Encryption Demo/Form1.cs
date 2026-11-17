@@ -175,8 +175,6 @@ namespace Main_Demo
                 sourceAudioFilter,
                 audioCaptureDevices[cbAudioCaptureSource.SelectedIndex].Name);
 
-            // Render the preview pin on the video capture filter
-            // Use this instead of graphBuilder.RenderFile
             Guid CLSID_VFRGB2YUV = new Guid("3BDA461E-12DB-4C24-9815-B68D1AA4D34A"); // "VisioForge RGB2YUV"
             rgb2yuvFilter = FilterGraphTools.AddFilterFromClsid(filterGraphSource, CLSID_VFRGB2YUV, "VisioForge RGB2YUV");
 
@@ -367,7 +365,11 @@ namespace Main_Demo
             DsError.ThrowExceptionForHR(hr);
 
             // A file without audio is fine
-            captureGraphSource.RenderStream(null, MediaType.Audio, sourceVideoFilter, audioEncFilter, muxFilter);
+            if (FilterHelper.GetFreePinWithMediaType(sourceVideoFilter, PinDirection.Output, MediaType.Audio) != null)
+            {
+                hr = captureGraphSource.RenderStream(null, MediaType.Audio, sourceVideoFilter, audioEncFilter, muxFilter);
+                DsError.ThrowExceptionForHR(hr);
+            }
 
             hr = captureGraphSource.RenderStream(null, null, muxFilter, null, fileWriterFilter);
             DsError.ThrowExceptionForHR(hr);
