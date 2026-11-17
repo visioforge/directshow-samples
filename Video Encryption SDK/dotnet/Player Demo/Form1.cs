@@ -86,7 +86,7 @@ namespace Player_Demo
 
                     if (string.IsNullOrEmpty(encryptionKey))
                     {
-                        MessageBox.Show(this, "Encryption error not set! 123 will be used!");
+                        MessageBox.Show(this, "Encryption key not set! 123 will be used!");
                         encryptionKey = "123";
                     }
 
@@ -194,7 +194,7 @@ namespace Player_Demo
 
                     if (string.IsNullOrEmpty(encryptionKey))
                     {
-                        MessageBox.Show(this, "Encryption error not set! 123 will be used!");
+                        MessageBox.Show(this, "Encryption key not set! 123 will be used!");
                         encryptionKey = "123";
                     }
 

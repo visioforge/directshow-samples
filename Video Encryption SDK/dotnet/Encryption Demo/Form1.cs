@@ -340,7 +340,7 @@ namespace Main_Demo
             sourceVideoFilter = FilterGraphTools.AddFilterFromClsid(filterGraphSource, CLSID_LAVSplitterSource, "LAV Splitter Source");
             if (sourceVideoFilter == null)
             {
-                MessageBox.Show(this, "Unable to create LAV Splitter Source filter.");
+                MessageBox.Show(this, "Unable to create LAV Splitter Source filter. Install LAV Filters.");
                 return;
             }
 
@@ -370,8 +370,8 @@ namespace Main_Demo
             hr = captureGraphSource.RenderStream(null, null, rgb2yuvFilter, videoEncFilter, muxFilter);
             DsError.ThrowExceptionForHR(hr);
 
-            hr = captureGraphSource.RenderStream(null, MediaType.Audio, sourceVideoFilter, audioEncFilter, muxFilter);
-            DsError.ThrowExceptionForHR(hr);
+            // A file without audio is fine
+            captureGraphSource.RenderStream(null, MediaType.Audio, sourceVideoFilter, audioEncFilter, muxFilter);
 
             hr = captureGraphSource.RenderStream(null, null, muxFilter, null, fileWriterFilter);
             DsError.ThrowExceptionForHR(hr);
