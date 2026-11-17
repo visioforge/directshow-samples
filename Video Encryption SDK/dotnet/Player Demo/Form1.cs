@@ -110,7 +110,7 @@ namespace Player_Demo
             }
             else
             {
-                MessageBox.Show(this, "Unable to find encryptor filter interface.");
+                MessageBox.Show(this, "Unable to find decryptor filter interface.");
             }
         }
 
@@ -212,7 +212,7 @@ namespace Player_Demo
             }
             else
             {
-                MessageBox.Show(this, "Unable to find encryptor filter interface.");
+                MessageBox.Show(this, "Unable to find decryptor filter interface.");
             }
 
             Guid CLSID_VideoMixingRenderer9 = new Guid("51b4abf3-748f-4e3b-a276-c828330e926a");
