@@ -264,7 +264,7 @@
             this.Controls.Add(this.btOpenFile);
             this.Controls.Add(this.edSourceFile);
             this.Name = "Form1";
-            this.Text = "Video Encryption SDK - Encryption Demo";
+            this.Text = "Video Encryption SDK - Player Demo";
             this.groupBox48.ResumeLayout(false);
             this.groupBox48.PerformLayout();
             this.groupBox47.ResumeLayout(false);

@@ -246,6 +246,9 @@ namespace Player_Demo
             hr = captureGraph.RenderStream(null, MediaType.Video, decryptor, null, videoRenderer);
             DsError.ThrowExceptionForHR(hr);
 
+            // Audio goes to the default sound device; a file without audio is fine
+            captureGraph.RenderStream(null, MediaType.Audio, decryptor, null, null);
+
             UpdateVdeoWindow();
 
             if (cbDebugMode.Checked)

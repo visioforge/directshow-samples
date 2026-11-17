@@ -8,7 +8,6 @@ namespace Main_Demo
     using System.IO;
     using System.Runtime.InteropServices;
     using System.Security.Cryptography;
-    using System.Security.Permissions;
     using System.Windows.Forms;
 
     using VisioForge.DirectShowAPI;
@@ -292,7 +291,7 @@ namespace Main_Demo
 
                     if (string.IsNullOrEmpty(encryptionKey))
                     {
-                        MessageBox.Show(this, "Encryption error not set! 123 will be used!");
+                        MessageBox.Show(this, "Encryption key not set! 123 will be used!");
                         encryptionKey = "123";
                     }
 
@@ -336,13 +335,18 @@ namespace Main_Demo
             hr = captureGraphSource.SetFiltergraph(filterGraphSource);
             DsError.ThrowExceptionForHR(hr);
 
-            filterGraphSource.AddSourceFilter(edSourceFile.Text, "Source file", out sourceVideoFilter);
+            // LAV Splitter Source splits the file into video and audio streams
+            Guid CLSID_LAVSplitterSource = new Guid("B98D13E7-55DB-4385-A33D-09FD1BA26338");
+            sourceVideoFilter = FilterGraphTools.AddFilterFromClsid(filterGraphSource, CLSID_LAVSplitterSource, "LAV Splitter Source");
+            if (sourceVideoFilter == null)
+            {
+                MessageBox.Show(this, "Unable to create LAV Splitter Source filter.");
+                return;
+            }
 
-            // sinks
-            AddEncryptor();
+            hr = ((IFileSourceFilter)sourceVideoFilter).Load(edSourceFile.Text, null);
+            DsError.ThrowExceptionForHR(hr);
 
-            // Render the preview pin on the video capture filter
-            // Use this instead of graphBuilder.RenderFile
             Guid CLSID_VFRGB2YUV = new Guid("3BDA461E-12DB-4C24-9815-B68D1AA4D34A"); // "VisioForge RGB2YUV"
             rgb2yuvFilter = FilterGraphTools.AddFilterFromClsid(
                 filterGraphSource,
@@ -355,13 +359,18 @@ namespace Main_Demo
                 return;
             }
 
-            hr = captureGraphSource.RenderStream(null, null, sourceVideoFilter, null, rgb2yuvFilter);
+            // Decode the video into RGB2YUV before the encoders join the graph,
+            // so the decoder chain never routes through the H264 encoder
+            hr = captureGraphSource.RenderStream(null, MediaType.Video, sourceVideoFilter, null, rgb2yuvFilter);
             DsError.ThrowExceptionForHR(hr);
+
+            // sinks
+            AddEncryptor();
 
             hr = captureGraphSource.RenderStream(null, null, rgb2yuvFilter, videoEncFilter, muxFilter);
             DsError.ThrowExceptionForHR(hr);
 
-            hr = captureGraphSource.RenderStream(null, null, sourceVideoFilter, audioEncFilter, muxFilter);
+            hr = captureGraphSource.RenderStream(null, MediaType.Audio, sourceVideoFilter, audioEncFilter, muxFilter);
             DsError.ThrowExceptionForHR(hr);
 
             hr = captureGraphSource.RenderStream(null, null, muxFilter, null, fileWriterFilter);
@@ -538,7 +547,6 @@ namespace Main_Demo
         /// <param name="m">
         /// Message m.
         /// </param>
-        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
         protected override void WndProc(ref Message m)
         {
             try
