@@ -364,9 +364,11 @@ namespace Main_Demo
             hr = captureGraphSource.RenderStream(null, null, rgb2yuvFilter, videoEncFilter, muxFilter);
             DsError.ThrowExceptionForHR(hr);
 
-            // A file without audio is fine
-            if (FilterHelper.GetFreePinWithMediaType(sourceVideoFilter, PinDirection.Output, MediaType.Audio) != null)
+            // A file without audio is encrypted video-only
+            IPin audioPin = FilterHelper.GetFreePinWithMediaType(sourceVideoFilter, PinDirection.Output, MediaType.Audio);
+            if (audioPin != null)
             {
+                Marshal.ReleaseComObject(audioPin);
                 hr = captureGraphSource.RenderStream(null, MediaType.Audio, sourceVideoFilter, audioEncFilter, muxFilter);
                 DsError.ThrowExceptionForHR(hr);
             }

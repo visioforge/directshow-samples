@@ -240,11 +240,16 @@ namespace Player_Demo
             hr = captureGraph.RenderStream(null, MediaType.Video, decryptor, null, videoRenderer);
             DsError.ThrowExceptionForHR(hr);
 
-            // Audio goes to the default sound device; a file without audio is fine
-            if (FilterHelper.GetFreePinWithMediaType(decryptor, PinDirection.Output, MediaType.Audio) != null)
+            // Audio goes to the default sound device; a file without audio plays video-only
+            IPin audioPin = FilterHelper.GetFreePinWithMediaType(decryptor, PinDirection.Output, MediaType.Audio);
+            if (audioPin != null)
             {
+                Marshal.ReleaseComObject(audioPin);
                 hr = captureGraph.RenderStream(null, MediaType.Audio, decryptor, null, null);
-                DsError.ThrowExceptionForHR(hr);
+                if (hr < 0)
+                {
+                    MessageBox.Show(this, $"Unable to play the audio (0x{hr:X8}), playing video only.");
+                }
             }
 
             UpdateVdeoWindow();
