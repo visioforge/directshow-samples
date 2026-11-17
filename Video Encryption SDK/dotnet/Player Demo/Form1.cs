@@ -96,7 +96,7 @@ namespace Player_Demo
                 {
                     if (!File.Exists(edEncryptionKeyFile.Text))
                     {
-                        MessageBox.Show(this, "Unable to open file key for encryptor.");
+                        MessageBox.Show(this, "Unable to open file key for decryptor.");
                         return;
                     }
 
@@ -291,7 +291,7 @@ namespace Player_Demo
         {
             if (rbEncryptionKeyFile.Checked && !File.Exists(edEncryptionKeyFile.Text))
             {
-                MessageBox.Show(this, "Unable to open file key for encryptor.");
+                MessageBox.Show(this, "Unable to open file key for decryptor.");
                 return;
             }
 

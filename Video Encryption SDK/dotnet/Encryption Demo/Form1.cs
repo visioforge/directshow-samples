@@ -334,7 +334,7 @@ namespace Main_Demo
             sourceVideoFilter = FilterGraphTools.AddFilterFromClsid(filterGraphSource, CLSID_LAVSplitterSource, "LAV Splitter Source");
             if (sourceVideoFilter == null)
             {
-                MessageBox.Show(this, "Unable to create LAV Splitter Source filter. Install LAV Filters.");
+                MessageBox.Show(this, "Unable to create LAV Splitter Source filter. Install the Video Encryption SDK redist, it includes LAV Filters.");
                 return;
             }
 
