@@ -184,36 +184,7 @@ namespace Player_Demo
                     "VisioForge Decryptor v9");
             }
 
-            // ReSharper disable once SuspiciousTypeConversion.Global
-            IVFCryptoConfig cryptoConfig = decryptor as IVFCryptoConfig;
-            if (cryptoConfig != null)
-            {
-                if (rbEncryptionKeyString.Checked)
-                {
-                    string encryptionKey = edEncryptionKeyString.Text;
-
-                    if (string.IsNullOrEmpty(encryptionKey))
-                    {
-                        MessageBox.Show(this, "Encryption key not set! 123 will be used!");
-                        encryptionKey = "123";
-                    }
-
-                    cryptoConfig.ApplyString(encryptionKey);
-                }
-                else if (rbEncryptionKeyFile.Checked)
-                {
-                    cryptoConfig.ApplyFile(edEncryptionKeyFile.Text);
-                }
-                else
-                {
-                    byte[] data = ConvertHexStringToByteArray(edEncryptionKeyHEX.Text);
-                    cryptoConfig.ApplyBinary(data);
-                }
-            }
-            else
-            {
-                MessageBox.Show(this, "Unable to find decryptor filter interface.");
-            }
+            ApplyDecryptorSettings();
 
             Guid CLSID_VideoMixingRenderer9 = new Guid("51b4abf3-748f-4e3b-a276-c828330e926a");
             videoRenderer = FilterGraphTools.AddFilterFromClsid(
