@@ -86,7 +86,7 @@ namespace Player_Demo
 
                     if (string.IsNullOrEmpty(encryptionKey))
                     {
-                        MessageBox.Show(this, "Encryption error not set! 123 will be used!");
+                        MessageBox.Show(this, "Encryption key not set! 123 will be used!");
                         encryptionKey = "123";
                     }
 
@@ -96,7 +96,7 @@ namespace Player_Demo
                 {
                     if (!File.Exists(edEncryptionKeyFile.Text))
                     {
-                        MessageBox.Show(this, "Unable to open file key for encryptor.");
+                        MessageBox.Show(this, "Unable to open file key for decryptor.");
                         return;
                     }
 
@@ -110,7 +110,7 @@ namespace Player_Demo
             }
             else
             {
-                MessageBox.Show(this, "Unable to find encryptor filter interface.");
+                MessageBox.Show(this, "Unable to find decryptor filter interface.");
             }
         }
 
@@ -194,7 +194,7 @@ namespace Player_Demo
 
                     if (string.IsNullOrEmpty(encryptionKey))
                     {
-                        MessageBox.Show(this, "Encryption error not set! 123 will be used!");
+                        MessageBox.Show(this, "Encryption key not set! 123 will be used!");
                         encryptionKey = "123";
                     }
 
@@ -202,12 +202,6 @@ namespace Player_Demo
                 }
                 else if (rbEncryptionKeyFile.Checked)
                 {
-                    if (!File.Exists(edEncryptionKeyFile.Text))
-                    {
-                        MessageBox.Show(this, "Unable to open file key for encryptor.");
-                        return;
-                    }
-
                     cryptoConfig.ApplyFile(edEncryptionKeyFile.Text);
                 }
                 else
@@ -218,7 +212,7 @@ namespace Player_Demo
             }
             else
             {
-                MessageBox.Show(this, "Unable to find encryptor filter interface.");
+                MessageBox.Show(this, "Unable to find decryptor filter interface.");
             }
 
             Guid CLSID_VideoMixingRenderer9 = new Guid("51b4abf3-748f-4e3b-a276-c828330e926a");
@@ -245,6 +239,18 @@ namespace Player_Demo
 
             hr = captureGraph.RenderStream(null, MediaType.Video, decryptor, null, videoRenderer);
             DsError.ThrowExceptionForHR(hr);
+
+            // Audio goes to the default sound device; a file without audio plays video-only
+            IPin audioPin = FilterHelper.GetFreePinWithMediaType(decryptor, PinDirection.Output, MediaType.Audio);
+            if (audioPin != null)
+            {
+                Marshal.ReleaseComObject(audioPin);
+                hr = captureGraph.RenderStream(null, MediaType.Audio, decryptor, null, null);
+                if (hr < 0)
+                {
+                    MessageBox.Show(this, $"Unable to play the audio (0x{hr:X8}), playing video only.");
+                }
+            }
 
             UpdateVdeoWindow();
 
@@ -283,6 +289,12 @@ namespace Player_Demo
 
         private void btSourceStart_Click(object sender, EventArgs e)
         {
+            if (rbEncryptionKeyFile.Checked && !File.Exists(edEncryptionKeyFile.Text))
+            {
+                MessageBox.Show(this, "Unable to open file key for decryptor.");
+                return;
+            }
+
             btSourceStart.Enabled = false;
             btSourceStop.Enabled = true;
 
