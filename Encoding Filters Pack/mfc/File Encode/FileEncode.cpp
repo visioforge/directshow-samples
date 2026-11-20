@@ -145,7 +145,7 @@ void CFileEncodeDlg::UpdateEncoderStatus()
 
     wchar_t status[160];
     GetDlgItemText(IDC_STATUS, status, 160);
-    if (wcsncmp(status, L"Max 1920x1080", 14) == 0)
+    if (wcscmp(status, L"Max 1920x1080 for software encoders.") == 0)
     {
         SetDlgItemText(IDC_STATUS, L"Idle.");
     }
