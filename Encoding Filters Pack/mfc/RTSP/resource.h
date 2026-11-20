@@ -1,0 +1,17 @@
+#pragma once
+
+#define IDD_RTSP 101
+#define IDC_FILE 1001
+#define IDC_CAMERA 1002
+#define IDC_SOURCE 1003
+#define IDC_BROWSE_SOURCE 1004
+#define IDC_CAMERA_DEVICE 1005
+#define IDC_AUDIO_DEVICE 1006
+#define IDC_VBITRATE 1007
+#define IDC_AUDIO 1008
+#define IDC_ABITRATE 1009
+#define IDC_URL 1010
+#define IDC_START 1011
+#define IDC_STOP 1012
+#define IDC_STATUS 1013
+#define IDC_PREVIEW 1014
