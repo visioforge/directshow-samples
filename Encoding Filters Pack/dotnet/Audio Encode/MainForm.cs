@@ -14,6 +14,7 @@ namespace VisioForge.Samples.AudioEncode
         private readonly Button _browseSource = new Button();
         private readonly ComboBox _devices = new ComboBox();
         private readonly ComboBox _formats = new ComboBox();
+        private readonly Label _rateLabel = new Label();
         private readonly NumericUpDown _bitrate = new NumericUpDown();
         private readonly TextBox _output = new TextBox();
         private readonly Button _browseOutput = new Button();
@@ -75,15 +76,15 @@ namespace VisioForge.Samples.AudioEncode
             formatLabel.Text = "Format";
             formatLabel.SetBounds(16, 118, 80, 20);
             _formats.DropDownStyle = ComboBoxStyle.DropDownList;
-            _formats.Items.Add(new FormatChoice("MP3 (LAME)", true, ".mp3"));
-            _formats.Items.Add(new FormatChoice("AAC in MP4", false, ".mp4"));
+            _formats.Items.Add(new FormatChoice("MP3 (LAME)", 0, ".mp3"));
+            _formats.Items.Add(new FormatChoice("AAC in MP4", 1, ".mp4"));
+            _formats.Items.Add(new FormatChoice("FLAC", 2, ".flac"));
             _formats.SelectedIndex = 0;
             _formats.SetBounds(16, 138, 200, 24);
-            _formats.SelectedIndexChanged += delegate { ApplyExtension(); };
+            _formats.SelectedIndexChanged += delegate { ApplyFormatUi(); };
 
-            var bitrateLabel = new Label();
-            bitrateLabel.Text = "Bitrate (kbps)";
-            bitrateLabel.SetBounds(230, 118, 120, 20);
+            _rateLabel.Text = "Bitrate (kbps)";
+            _rateLabel.SetBounds(230, 118, 120, 20);
             _bitrate.Minimum = 32;
             _bitrate.Maximum = 320;
             _bitrate.Increment = 16;
@@ -113,7 +114,7 @@ namespace VisioForge.Samples.AudioEncode
             Controls.AddRange(new Control[]
             {
                 _fileSource, _deviceSource, _sourceFile, _browseSource, _devices,
-                formatLabel, _formats, bitrateLabel, _bitrate, outputLabel, _output, _browseOutput,
+                formatLabel, _formats, _rateLabel, _bitrate, outputLabel, _output, _browseOutput,
                 _start, _stop, _status
             });
 
@@ -144,6 +145,42 @@ namespace VisioForge.Samples.AudioEncode
             _sourceFile.Enabled = file;
             _browseSource.Enabled = file;
             _devices.Enabled = !file;
+        }
+
+        private void ApplyFormatUi()
+        {
+            var format = (FormatChoice)_formats.SelectedItem;
+            if (format == null)
+            {
+                return;
+            }
+
+            if (format.Kind == 2)
+            {
+                _rateLabel.Text = "Level (0-8)";
+                _bitrate.Minimum = 0;
+                if (_bitrate.Value > 8)
+                {
+                    _bitrate.Value = 5;
+                }
+
+                _bitrate.Maximum = 8;
+                _bitrate.Increment = 1;
+            }
+            else
+            {
+                _rateLabel.Text = "Bitrate (kbps)";
+                _bitrate.Maximum = 320;
+                if (_bitrate.Value < 32)
+                {
+                    _bitrate.Value = 128;
+                }
+
+                _bitrate.Minimum = 32;
+                _bitrate.Increment = 16;
+            }
+
+            ApplyExtension();
         }
 
         private void ApplyExtension()
@@ -180,7 +217,7 @@ namespace VisioForge.Samples.AudioEncode
             var format = (FormatChoice)_formats.SelectedItem;
             using (var dialog = new SaveFileDialog())
             {
-                dialog.Filter = format.Mp3 ? "MP3|*.mp3" : "MP4|*.mp4";
+                dialog.Filter = format.Kind == 2 ? "FLAC|*.flac" : format.Kind == 0 ? "MP3|*.mp3" : "MP4|*.mp4";
                 dialog.FileName = "audio" + format.Extension;
                 if (dialog.ShowDialog(this) == DialogResult.OK)
                 {
@@ -230,7 +267,7 @@ namespace VisioForge.Samples.AudioEncode
                     _fileSource.Checked,
                     _sourceFile.Text,
                     device,
-                    format.Mp3,
+                    format.Kind,
                     (int)_bitrate.Value,
                     output);
 

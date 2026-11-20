@@ -13,3 +13,4 @@
 #define IDC_START 1010
 #define IDC_STOP 1011
 #define IDC_STATUS 1012
+#define IDC_UNIT 1013

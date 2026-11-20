@@ -18,6 +18,15 @@ static const GUID kClsidMp4 =
 static const GUID kIidMp4 =
 { 0x9E26CE8B, 0x6708, 0x4535, { 0xAA, 0xA4, 0x23, 0xF9, 0xA9, 0x7C, 0x79, 0x37 } };
 
+static const GUID kClsidFlac =
+{ 0xBE5B270D, 0x73AA, 0x4368, { 0xAA, 0x56, 0xBF, 0xBC, 0x87, 0x0B, 0x52, 0xCF } };
+
+static const GUID kIidFlac =
+{ 0xA6096781, 0x2A65, 0x4540, { 0xA5, 0x36, 0x01, 0x12, 0x35, 0xD0, 0xA5, 0xFE } };
+
+static const GUID kClsidDump =
+{ 0x83DF94EE, 0x5A0A, 0x4730, { 0x98, 0x18, 0x97, 0x26, 0xCE, 0x11, 0x7C, 0xEC } };
+
 // Methods before set_Bitrate stay in the vtable so the bitrate call lands on the right slot.
 struct IAudioEncoderProperties : public IUnknown
 {
@@ -43,6 +52,13 @@ struct IMP4V10MuxerConfig : public IUnknown
     virtual HRESULT STDMETHODCALLTYPE SetLiveDisabled(BOOL liveDisabled) = 0;
 };
 
+// canModifySettings stays in the vtable so setEncodingLevel lands on the right slot.
+struct IFLACEncodeSettings : public IUnknown
+{
+    virtual BOOL STDMETHODCALLTYPE canModifySettings() = 0;
+    virtual BOOL STDMETHODCALLTYPE setEncodingLevel(unsigned level) = 0;
+};
+
 namespace
 {
     void EnsureParent(const wchar_t* path)
@@ -57,6 +73,33 @@ namespace
 
         *slash = L'\0';
         SHCreateDirectoryExW(NULL, directory, NULL);
+    }
+
+    int SelectedFormat(CWnd* dialog)
+    {
+        CComboBox* formats = (CComboBox*)dialog->GetDlgItem(IDC_FORMAT);
+        const int index = formats->GetCurSel();
+        if (index < 0)
+        {
+            return 0;
+        }
+
+        return (int)formats->GetItemData(index);
+    }
+
+    const wchar_t* ExtensionFor(int kind)
+    {
+        if (kind == 2)
+        {
+            return L".flac";
+        }
+
+        if (kind == 1)
+        {
+            return L".mp4";
+        }
+
+        return L".mp3";
     }
 }
 
@@ -96,6 +139,8 @@ BOOL CAudioEncodeDlg::OnInitDialog()
     formats->SetItemData(mp3, 1);
     int aac = formats->AddString(L"AAC in MP4");
     formats->SetItemData(aac, 0);
+    int flac = formats->AddString(L"FLAC");
+    formats->SetItemData(flac, 2);
     formats->SetCurSel(0);
 
     FillDevices(CLSID_AudioInputDeviceCategory, *(CComboBox*)GetDlgItem(IDC_AUDIO_DEVICE), false);
@@ -129,8 +174,6 @@ void CAudioEncodeDlg::UpdateSourceMode()
 
 void CAudioEncodeDlg::UpdateOutputName()
 {
-    CComboBox* formats = (CComboBox*)GetDlgItem(IDC_FORMAT);
-    const bool mp3 = formats->GetItemData(formats->GetCurSel()) == 1;
     wchar_t current[MAX_PATH];
     GetDlgItemText(IDC_OUTPUT, current, MAX_PATH);
     wchar_t directory[MAX_PATH];
@@ -143,7 +186,7 @@ void CAudioEncodeDlg::UpdateOutputName()
 
     *slash = L'\0';
     wchar_t path[MAX_PATH];
-    StringCchPrintfW(path, MAX_PATH, L"%s\\audio%s", directory, mp3 ? L".mp3" : L".mp4");
+    StringCchPrintfW(path, MAX_PATH, L"%s\\audio%s", directory, ExtensionFor(SelectedFormat(this)));
     SetDlgItemText(IDC_OUTPUT, path);
 }
 
@@ -154,6 +197,25 @@ void CAudioEncodeDlg::OnSourceMode()
 
 void CAudioEncodeDlg::OnFormatChanged()
 {
+    const int kind = SelectedFormat(this);
+    const int value = (int)GetDlgItemInt(IDC_BITRATE, NULL, FALSE);
+    if (kind == 2)
+    {
+        SetDlgItemText(IDC_UNIT, L"level");
+        if (value > 8)
+        {
+            SetDlgItemInt(IDC_BITRATE, 5, FALSE);
+        }
+    }
+    else
+    {
+        SetDlgItemText(IDC_UNIT, L"kbps");
+        if (value < 32)
+        {
+            SetDlgItemInt(IDC_BITRATE, 128, FALSE);
+        }
+    }
+
     UpdateOutputName();
 }
 
@@ -168,12 +230,14 @@ void CAudioEncodeDlg::OnBrowseSource()
 
 void CAudioEncodeDlg::OnBrowseOutput()
 {
-    CComboBox* formats = (CComboBox*)GetDlgItem(IDC_FORMAT);
-    const bool mp3 = formats->GetItemData(formats->GetCurSel()) == 1;
-    const wchar_t* extension = mp3 ? L".mp3" : L".mp4";
+    const int kind = SelectedFormat(this);
+    const wchar_t* extension = ExtensionFor(kind);
+    const wchar_t* title = kind == 2 ? L"FLAC" : kind == 1 ? L"MP4" : L"MP3";
     wchar_t filter[64];
-    StringCchPrintfW(filter, 64, L"%s|*%s|All files|*.*||", mp3 ? L"MP3" : L"MP4", extension);
-    CFileDialog dialog(FALSE, extension + 1, mp3 ? L"audio.mp3" : L"audio.mp4", OFN_OVERWRITEPROMPT, filter, this);
+    wchar_t fileName[32];
+    StringCchPrintfW(filter, 64, L"%s|*%s|All files|*.*||", title, extension);
+    StringCchPrintfW(fileName, 32, L"audio%s", extension);
+    CFileDialog dialog(FALSE, extension + 1, fileName, OFN_OVERWRITEPROMPT, filter, this);
     if (dialog.DoModal() == IDOK)
     {
         SetDlgItemText(IDC_OUTPUT, dialog.GetPathName());
@@ -233,12 +297,18 @@ void CAudioEncodeDlg::OnStart()
         return;
     }
 
-    CComboBox* formats = (CComboBox*)GetDlgItem(IDC_FORMAT);
-    const bool mp3 = formats->GetItemData(formats->GetCurSel()) == 1;
-    int bitrate = (int)GetDlgItemInt(IDC_BITRATE, NULL, FALSE);
-    if (bitrate <= 0)
+    const int kind = SelectedFormat(this);
+    int rate = (int)GetDlgItemInt(IDC_BITRATE, NULL, FALSE);
+    if (kind == 2)
     {
-        bitrate = 128;
+        if (rate > 8)
+        {
+            rate = 8;
+        }
+    }
+    else if (rate <= 0)
+    {
+        rate = 128;
     }
 
     EnsureParent(output);
@@ -307,7 +377,7 @@ void CAudioEncodeDlg::OnStart()
         }
     }
 
-    if (mp3)
+    if (kind == 0)
     {
         hr = AddByClsid(m_graph, kClsidLame, L"LAME encoder", &encoder);
         if (Failed(hr, L"Add the LAME encoder. Install the Encoding Filters Pack."))
@@ -317,6 +387,20 @@ void CAudioEncodeDlg::OnStart()
 
         hr = AddByClsid(m_graph, CLSID_FileWriter, L"File writer", &sink);
         if (Failed(hr, L"Add the file writer"))
+        {
+            goto cleanup;
+        }
+    }
+    else if (kind == 2)
+    {
+        hr = AddByClsid(m_graph, kClsidFlac, L"FLAC encoder", &encoder);
+        if (Failed(hr, L"Add the FLAC encoder. Install the Encoding Filters Pack."))
+        {
+            goto cleanup;
+        }
+
+        hr = AddByClsid(m_graph, kClsidDump, L"Dump", &sink);
+        if (Failed(hr, L"Add the Dump filter. Install the Encoding Filters Pack."))
         {
             goto cleanup;
         }
@@ -364,40 +448,74 @@ void CAudioEncodeDlg::OnStart()
         goto cleanup;
     }
 
-    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Audio, source, encoder, sink);
-    if (Failed(hr, mp3 ? L"Connect LAME" : L"Connect AAC"))
+    if (kind == 2)
     {
-        goto cleanup;
-    }
-
-    if (mp3)
-    {
-        IAudioEncoderProperties* lame = NULL;
-        hr = encoder->QueryInterface(kIidLame, (void**)&lame);
-        if (SUCCEEDED(hr) && lame != NULL)
+        hr = m_capture->RenderStream(NULL, &MEDIATYPE_Audio, source, NULL, encoder);
+        if (Failed(hr, L"Connect FLAC"))
         {
-            hr = lame->set_Bitrate((DWORD)bitrate);
-            lame->Release();
+            goto cleanup;
         }
 
-        if (Failed(hr, L"Set MP3 bitrate"))
+        IFLACEncodeSettings* flac = NULL;
+        hr = encoder->QueryInterface(kIidFlac, (void**)&flac);
+        if (SUCCEEDED(hr) && flac != NULL)
+        {
+            if (!flac->setEncodingLevel((unsigned)rate))
+            {
+                hr = E_FAIL;
+            }
+
+            flac->Release();
+        }
+
+        if (Failed(hr, L"Set the FLAC level"))
+        {
+            goto cleanup;
+        }
+
+        hr = m_capture->RenderStream(NULL, &MEDIATYPE_Audio, encoder, NULL, sink);
+        if (Failed(hr, L"Connect the Dump filter"))
         {
             goto cleanup;
         }
     }
     else
     {
-        IVFAACEncoder* aac = NULL;
-        hr = encoder->QueryInterface(kIidAac, (void**)&aac);
-        if (SUCCEEDED(hr) && aac != NULL)
-        {
-            hr = aac->SetBitRate((UINT32)bitrate * 1000);
-            aac->Release();
-        }
-
-        if (Failed(hr, L"Set AAC bitrate"))
+        hr = m_capture->RenderStream(NULL, &MEDIATYPE_Audio, source, encoder, sink);
+        if (Failed(hr, kind == 0 ? L"Connect LAME" : L"Connect AAC"))
         {
             goto cleanup;
+        }
+
+        if (kind == 0)
+        {
+            IAudioEncoderProperties* lame = NULL;
+            hr = encoder->QueryInterface(kIidLame, (void**)&lame);
+            if (SUCCEEDED(hr) && lame != NULL)
+            {
+                hr = lame->set_Bitrate((DWORD)rate);
+                lame->Release();
+            }
+
+            if (Failed(hr, L"Set MP3 bitrate"))
+            {
+                goto cleanup;
+            }
+        }
+        else
+        {
+            IVFAACEncoder* aac = NULL;
+            hr = encoder->QueryInterface(kIidAac, (void**)&aac);
+            if (SUCCEEDED(hr) && aac != NULL)
+            {
+                hr = aac->SetBitRate((UINT32)rate * 1000);
+                aac->Release();
+            }
+
+            if (Failed(hr, L"Set AAC bitrate"))
+            {
+                goto cleanup;
+            }
         }
     }
 

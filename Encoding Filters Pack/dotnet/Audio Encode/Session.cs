@@ -7,16 +7,17 @@ namespace VisioForge.Samples.AudioEncode
 {
     internal sealed class FormatChoice
     {
-        public FormatChoice(string caption, bool mp3, string extension)
+        public FormatChoice(string caption, int kind, string extension)
         {
             Caption = caption;
-            Mp3 = mp3;
+            Kind = kind;
             Extension = extension;
         }
 
         public string Caption { get; private set; }
 
-        public bool Mp3 { get; private set; }
+        /// <summary>0 is MP3, 1 is AAC, 2 is FLAC.</summary>
+        public int Kind { get; private set; }
 
         public string Extension { get; private set; }
 
@@ -28,6 +29,7 @@ namespace VisioForge.Samples.AudioEncode
 
     /// <summary>
     /// Audio-only file. MP3 is LAME into a File Writer. AAC is the v10 encoder into the v10 MP4 muxer.
+    /// FLAC is the Xiph encoder into the Dump filter.
     /// </summary>
     internal sealed class Session
     {
@@ -47,8 +49,8 @@ namespace VisioForge.Samples.AudioEncode
             bool fileSource,
             string sourceFile,
             DsDevice audioDevice,
-            bool mp3,
-            int bitrateKbps,
+            int kind,
+            int rate,
             string outputPath)
         {
             Stop();
@@ -72,7 +74,12 @@ namespace VisioForge.Samples.AudioEncode
                 Check(_graph.AddFilter(_source, audioDevice.Name), "Add audio device");
             }
 
-            if (mp3)
+            if (kind == 2 && rate > 8)
+            {
+                rate = 8;
+            }
+
+            if (kind == 0)
             {
                 var lame = AddFromClsid(DSFilterInitInfoConsts.LAMEDShowFilter.CLSID, "LAME encoder");
                 var writer = Add((IBaseFilter)new FileWriter(), "File writer");
@@ -85,7 +92,23 @@ namespace VisioForge.Samples.AudioEncode
 
                 Check(sink.SetFileName(outputPath, null), "Set output path");
                 Check(_capture.RenderStream(null, MediaType.Audio, _source, lame, writer), "Connect LAME");
-                ConfigureLame(lame, bitrateKbps);
+                ConfigureLame(lame, rate);
+            }
+            else if (kind == 2)
+            {
+                var flac = AddFromClsid(DSFilterInitInfoConsts.VFXiphFLACEncoder.CLSID, "FLAC encoder");
+                var dump = AddFromClsid(DSFilterInitInfoConsts.VFDump.CLSID, "Dump");
+                ApplyLicense(flac);
+                var sink = dump as IFileSinkFilter;
+                if (sink == null)
+                {
+                    throw new InvalidOperationException("The Dump filter has no file sink.");
+                }
+
+                Check(sink.SetFileName(outputPath, null), "Set output path");
+                Check(_capture.RenderStream(null, MediaType.Audio, _source, null, flac), "Connect FLAC");
+                ConfigureFlac(flac, rate);
+                Check(_capture.RenderStream(null, MediaType.Audio, flac, null, dump), "Connect the Dump filter");
             }
             else
             {
@@ -107,7 +130,7 @@ namespace VisioForge.Samples.AudioEncode
 
                 Check(sink.SetFileName(outputPath, null), "Set output path");
                 Check(_capture.RenderStream(null, MediaType.Audio, _source, aac, mux), "Connect AAC");
-                ConfigureAac(aac, bitrateKbps);
+                ConfigureAac(aac, rate);
             }
 
             if (fileSource)
@@ -209,6 +232,20 @@ namespace VisioForge.Samples.AudioEncode
             }
 
             Check(encoder.SetBitRate((uint)(bitrateKbps * 1000)), "Set AAC bitrate");
+        }
+
+        private static void ConfigureFlac(IBaseFilter filter, int level)
+        {
+            var encoder = filter as IFLACEncodeSettings;
+            if (encoder == null)
+            {
+                throw new InvalidOperationException("The FLAC encoder has no configuration interface.");
+            }
+
+            if (!encoder.setEncodingLevel((uint)level))
+            {
+                throw new InvalidOperationException("Set FLAC level failed.");
+            }
         }
 
         private IBaseFilter Add(IBaseFilter filter, string name)
