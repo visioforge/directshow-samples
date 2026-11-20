@@ -70,6 +70,39 @@ namespace
     {
         return value > 0 ? value : fallback;
     }
+
+    // VCD is 2, SVCD is 5, DVD is 6. Those discs are 4:3. Other containers follow the picture.
+    void DisplayAspect(int format, int width, int height, int* ratioW, int* ratioH)
+    {
+        if (format == 2 || format == 5 || format == 6)
+        {
+            *ratioW = 4;
+            *ratioH = 3;
+            return;
+        }
+
+        if (width < 1)
+        {
+            width = 1;
+        }
+
+        if (height < 1)
+        {
+            height = 1;
+        }
+
+        int divisor = width;
+        int rest = height;
+        while (rest != 0)
+        {
+            int next = divisor % rest;
+            divisor = rest;
+            rest = next;
+        }
+
+        *ratioW = width / divisor;
+        *ratioH = height / divisor;
+    }
 }
 
 CLegacyApp theApp;
@@ -410,8 +443,7 @@ void CLegacyDlg::OnStart()
     settings.audioChannels = channels;
     settings.videoWidth = width;
     settings.videoHeight = height;
-    settings.aspectRatioW = 16;
-    settings.aspectRatioH = 9;
+    DisplayAspect(format, width, height, &settings.aspectRatioW, &settings.aspectRatioH);
     settings.videoBitrate = videoBitrate;
     settings.videoMaxRate = videoBitrate;
     settings.videoMinRate = videoBitrate / 2;

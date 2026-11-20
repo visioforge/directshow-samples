@@ -95,6 +95,7 @@ namespace VisioForge.Samples.FileEncode
             encoderLabel.SetBounds(16, 176, 140, 20);
             _encoders.DropDownStyle = ComboBoxStyle.DropDownList;
             _encoders.SetBounds(16, 196, 294, 24);
+            _encoders.SelectedIndexChanged += delegate { UpdateEncoderStatus(); };
 
             var bitrateLabel = new Label();
             bitrateLabel.Text = "Video bitrate (kbps)";
@@ -205,26 +206,61 @@ namespace VisioForge.Samples.FileEncode
         private void LoadEncoders()
         {
             FiltersAvailableInfo info;
+            MFTEncoders encoders = null;
             var listed = true;
+            string listError = null;
             try
             {
-                info = MFTFilterEnum.GetFiltersAvailable(out _);
+                info = MFTFilterEnum.GetFiltersAvailable(out encoders);
             }
             catch (Exception ex)
             {
                 info = new FiltersAvailableInfo();
                 listed = false;
-                _status.Text = "Hardware encoders were not listed. " + ex.Message;
+                listError = "Hardware encoders were not listed. " + ex.Message;
             }
 
-            AddEncoder("H.264 software", VFMFVideoEncoder.MS_H264, !listed || info.H264_CPU);
+            var h265Software = false;
+            var h265Qsv = false;
+            var h265Nvenc = false;
+            var h265Amd = info.AMD_H265;
+            if (encoders != null)
+            {
+                foreach (var name in encoders.H265_SW_Encoders)
+                {
+                    if (name.Contains("HEVCVideoExtensionEncoder"))
+                    {
+                        h265Software = true;
+                    }
+                }
+
+                foreach (var name in encoders.H265_HW_Encoders)
+                {
+                    if (name.Contains("Intel") && (name.Contains("H.265") || name.Contains("H265")))
+                    {
+                        h265Qsv = true;
+                    }
+
+                    if (name.Contains("NVIDIA") && name.Contains("HEVC"))
+                    {
+                        h265Nvenc = true;
+                    }
+
+                    if (name.Contains("AMD") && name.ToUpperInvariant().Contains("H265"))
+                    {
+                        h265Amd = true;
+                    }
+                }
+            }
+
+            AddEncoder("H.264 software (max 1920x1080)", VFMFVideoEncoder.MS_H264, !listed || info.H264_CPU);
             AddEncoder("H.264 Intel QuickSync", VFMFVideoEncoder.QSV_H264, info.QSV_H264);
             AddEncoder("H.264 NVIDIA NVENC", VFMFVideoEncoder.NVENC_H264, info.NVENC_H264);
             AddEncoder("H.264 AMD", VFMFVideoEncoder.AMD_H264, info.AMD_H264);
-            AddEncoder("H.265 software", VFMFVideoEncoder.MS_H265, true);
-            AddEncoder("H.265 Intel QuickSync", VFMFVideoEncoder.QSV_H265, info.QSV_H265);
-            AddEncoder("H.265 NVIDIA NVENC", VFMFVideoEncoder.NVENC_H265, info.NVENC_H265);
-            AddEncoder("H.265 AMD", VFMFVideoEncoder.AMD_H265, info.AMD_H265);
+            AddEncoder("H.265 software (max 1920x1080)", VFMFVideoEncoder.MS_H265, h265Software);
+            AddEncoder("H.265 Intel QuickSync", VFMFVideoEncoder.QSV_H265, h265Qsv);
+            AddEncoder("H.265 NVIDIA NVENC", VFMFVideoEncoder.NVENC_H265, h265Nvenc);
+            AddEncoder("H.265 AMD", VFMFVideoEncoder.AMD_H265, h265Amd);
 
             for (var i = 0; i < _encoders.Items.Count; i++)
             {
@@ -239,6 +275,37 @@ namespace VisioForge.Samples.FileEncode
             {
                 _encodeAudio.Checked = false;
                 _encodeAudio.Enabled = false;
+            }
+
+            if (listError != null)
+            {
+                _status.Text = listError;
+            }
+            else
+            {
+                UpdateEncoderStatus();
+            }
+        }
+
+        private void UpdateEncoderStatus()
+        {
+            if (_running)
+            {
+                return;
+            }
+
+            var encoder = _encoders.SelectedItem as EncoderChoice;
+            var software = encoder != null
+                && (encoder.Encoder == VFMFVideoEncoder.MS_H264 || encoder.Encoder == VFMFVideoEncoder.MS_H265);
+            if (software)
+            {
+                _status.Text = "Max 1920x1080 for software encoders.";
+                return;
+            }
+
+            if (_status.Text.StartsWith("Max 1920x1080"))
+            {
+                _status.Text = "Idle.";
             }
         }
 
@@ -298,7 +365,7 @@ namespace VisioForge.Samples.FileEncode
         private void ApplyContainerExtension()
         {
             var mux = (MuxChoice)_containers.SelectedItem;
-            if (mux == null || mux.Extension == null || string.IsNullOrEmpty(_output.Text))
+            if (mux == null || string.IsNullOrEmpty(_output.Text))
             {
                 return;
             }
@@ -306,6 +373,12 @@ namespace VisioForge.Samples.FileEncode
             var directory = Path.GetDirectoryName(_output.Text);
             if (string.IsNullOrEmpty(directory))
             {
+                return;
+            }
+
+            if (mux.Extension == null)
+            {
+                _output.Text = Path.Combine(directory, "hls");
                 return;
             }
 

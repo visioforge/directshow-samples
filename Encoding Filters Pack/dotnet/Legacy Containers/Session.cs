@@ -227,6 +227,39 @@ namespace VisioForge.Samples.LegacyContainers
             }
         }
 
+        // VCD is 2, SVCD is 5, DVD is 6. Those discs are 4:3. Other containers follow the picture.
+        private static void DisplayAspect(int format, int width, int height, out int ratioW, out int ratioH)
+        {
+            if (format == 2 || format == 5 || format == 6)
+            {
+                ratioW = 4;
+                ratioH = 3;
+                return;
+            }
+
+            if (width < 1)
+            {
+                width = 1;
+            }
+
+            if (height < 1)
+            {
+                height = 1;
+            }
+
+            var divisor = width;
+            var rest = height;
+            while (rest != 0)
+            {
+                var next = divisor % rest;
+                divisor = rest;
+                rest = next;
+            }
+
+            ratioW = width / divisor;
+            ratioH = height / divisor;
+        }
+
         private static void ConfigureEncoder(
             IBaseFilter filter,
             string outputPath,
@@ -247,6 +280,9 @@ namespace VisioForge.Samples.LegacyContainers
             }
 
             var filename = Marshal.StringToCoTaskMemUni(outputPath);
+            int aspectW;
+            int aspectH;
+            DisplayAspect(format, width, height, out aspectW, out aspectH);
             try
             {
                 var settings = new FfmpegSettings
@@ -258,8 +294,8 @@ namespace VisioForge.Samples.LegacyContainers
                     AudioChannels = channels,
                     VideoWidth = width,
                     VideoHeight = height,
-                    AspectRatioW = 16,
-                    AspectRatioH = 9,
+                    AspectRatioW = aspectW,
+                    AspectRatioH = aspectH,
                     VideoBitrate = videoBitrate,
                     VideoMaxRate = videoBitrate,
                     VideoMinRate = videoBitrate / 2,

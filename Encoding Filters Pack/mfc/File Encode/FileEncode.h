@@ -27,6 +27,7 @@ protected:
     afx_msg void OnBrowseOutput();
     afx_msg void OnSourceMode();
     afx_msg void OnMuxChanged();
+    afx_msg void OnEncoderChanged();
     afx_msg LRESULT OnGraphNotify(WPARAM wparam, LPARAM lparam);
 
     DECLARE_MESSAGE_MAP()
@@ -35,6 +36,7 @@ private:
     void StopGraph();
     void UpdateSourceMode();
     void UpdateOutputName();
+    void UpdateEncoderStatus();
     bool Failed(HRESULT hr, const wchar_t* step);
 
     IGraphBuilder* m_graph;

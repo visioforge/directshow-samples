@@ -92,11 +92,11 @@ BOOL CFileEncodeDlg::OnInitDialog()
     SetDlgItemInt(IDC_ABITRATE, 128, FALSE);
 
     CComboBox* encoders = (CComboBox*)GetDlgItem(IDC_ENCODER);
-    AddEncoder(*encoders, L"H.264 software", VIDEO_ENCODER_MS_H264);
+    AddEncoder(*encoders, L"H.264 software (max 1920x1080)", VIDEO_ENCODER_MS_H264);
     AddEncoder(*encoders, L"H.264 Intel Quick Sync", VIDEO_ENCODER_QSV_H264);
     AddEncoder(*encoders, L"H.264 NVIDIA NVENC", VIDEO_ENCODER_NVENC_H264);
     AddEncoder(*encoders, L"H.264 AMD", VIDEO_ENCODER_AMD_H264);
-    AddEncoder(*encoders, L"H.265 software", VIDEO_ENCODER_MS_H265);
+    AddEncoder(*encoders, L"H.265 software (max 1920x1080)", VIDEO_ENCODER_MS_H265);
     AddEncoder(*encoders, L"H.265 Intel Quick Sync", VIDEO_ENCODER_QSV_H265);
     AddEncoder(*encoders, L"H.265 NVIDIA NVENC", VIDEO_ENCODER_NVENC_H265);
     AddEncoder(*encoders, L"H.265 AMD", VIDEO_ENCODER_AMD_H265);
@@ -124,7 +124,31 @@ BOOL CFileEncodeDlg::OnInitDialog()
     SetDlgItemText(IDC_OUTPUT, output);
     GetDlgItem(IDC_STOP)->EnableWindow(FALSE);
     UpdateSourceMode();
+    UpdateEncoderStatus();
     return TRUE;
+}
+
+void CFileEncodeDlg::UpdateEncoderStatus()
+{
+    if (m_running)
+    {
+        return;
+    }
+
+    CComboBox* encoders = (CComboBox*)GetDlgItem(IDC_ENCODER);
+    const int encoder = encoders->GetCurSel() < 0 ? -1 : (int)encoders->GetItemData(encoders->GetCurSel());
+    if (encoder == VIDEO_ENCODER_MS_H264 || encoder == VIDEO_ENCODER_MS_H265)
+    {
+        SetDlgItemText(IDC_STATUS, L"Max 1920x1080 for software encoders.");
+        return;
+    }
+
+    wchar_t status[160];
+    GetDlgItemText(IDC_STATUS, status, 160);
+    if (wcsncmp(status, L"Max 1920x1080", 14) == 0)
+    {
+        SetDlgItemText(IDC_STATUS, L"Idle.");
+    }
 }
 
 void CFileEncodeDlg::OnOK()
@@ -186,6 +210,11 @@ void CFileEncodeDlg::OnSourceMode()
 void CFileEncodeDlg::OnMuxChanged()
 {
     UpdateOutputName();
+}
+
+void CFileEncodeDlg::OnEncoderChanged()
+{
+    UpdateEncoderStatus();
 }
 
 void CFileEncodeDlg::OnBrowseSource()
@@ -635,5 +664,6 @@ BEGIN_MESSAGE_MAP(CFileEncodeDlg, CDialogEx)
     ON_BN_CLICKED(IDC_FILE, OnSourceMode)
     ON_BN_CLICKED(IDC_CAMERA, OnSourceMode)
     ON_CBN_SELCHANGE(IDC_MUX, OnMuxChanged)
+    ON_CBN_SELCHANGE(IDC_ENCODER, OnEncoderChanged)
     ON_MESSAGE(WM_GRAPH_NOTIFY, OnGraphNotify)
 END_MESSAGE_MAP()
