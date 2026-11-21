@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Platforms>x64;x86</Platforms>
+    <ApplicationIcon>visioforge_main_icon.ico</ApplicationIcon>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <RootNamespace>VisioForge.Samples.WebM</RootNamespace>
+    <AssemblyName>WebM</AssemblyName>
+    <ApplicationTitle>VisioForge WebM</ApplicationTitle>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="visioforge_main_icon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="VisioForge.DirectShowAPI" Version="2025.11.0" />
+  </ItemGroup>
+</Project>

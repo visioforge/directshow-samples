@@ -1,0 +1,17 @@
+#pragma once
+
+#define IDD_AUDIO 101
+#define IDI_ICON 102
+#define IDC_FILE 1001
+#define IDC_DEVICE 1002
+#define IDC_SOURCE 1003
+#define IDC_BROWSE_SOURCE 1004
+#define IDC_AUDIO_DEVICE 1005
+#define IDC_FORMAT 1006
+#define IDC_BITRATE 1007
+#define IDC_OUTPUT 1008
+#define IDC_BROWSE_OUTPUT 1009
+#define IDC_START 1010
+#define IDC_STOP 1011
+#define IDC_STATUS 1012
+#define IDC_UNIT 1013
