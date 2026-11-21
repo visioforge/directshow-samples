@@ -499,6 +499,19 @@ void CFileEncodeDlg::OnStart()
         goto cleanup;
     }
 
+    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, source, NULL, tee);
+    if (Failed(hr, L"Connect the source to the tee"))
+    {
+        goto cleanup;
+    }
+
+    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, tee, NULL, renderer);
+    if (Failed(hr, L"Connect the preview"))
+    {
+        goto cleanup;
+    }
+
+    // The renderer has a window only once its input pin is connected.
     hr = renderer->QueryInterface(IID_IVideoWindow, (void**)&m_window);
     if (Failed(hr, L"Get the preview window"))
     {
@@ -512,18 +525,6 @@ void CFileEncodeDlg::OnStart()
     m_window->put_WindowStyle(WS_CHILD | WS_CLIPCHILDREN);
     m_window->SetWindowPosition(0, 0, previewRect.right, previewRect.bottom);
     m_window->put_Visible(OATRUE);
-
-    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, source, NULL, tee);
-    if (Failed(hr, L"Connect the source to the tee"))
-    {
-        goto cleanup;
-    }
-
-    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, tee, NULL, renderer);
-    if (Failed(hr, L"Connect the preview"))
-    {
-        goto cleanup;
-    }
 
     hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, tee, rgb, mux);
     if (Failed(hr, L"Connect the encoder"))

@@ -94,16 +94,21 @@ namespace VisioForge.Samples.H264V10
             {
                 aac = AddFromClsid(DSFilterInitInfoConsts.VFAACEncoderV10.CLSID, "AAC encoder");
                 ApplyLicense(aac);
+                // The AAC encoder takes its bitrate only before its output pin is connected.
+                ConfigureAac(aac, audioBitrateKbps);
             }
 
             _window = (IVideoWindow)renderer;
+
+            Check(_capture.RenderStream(null, MediaType.Video, _source, null, tee), "Connect source video to tee");
+            Check(_capture.RenderStream(null, MediaType.Video, tee, null, renderer), "Connect preview");
+
+            // The renderer has a window only once its input pin is connected.
             Check(_window.put_Owner(preview), "Set preview owner");
             Check(_window.put_WindowStyle(WindowStyle.Child | WindowStyle.ClipChildren), "Set preview style");
             PlacePreview(previewWidth, previewHeight);
             Check(_window.put_Visible(OABool.True), "Show preview");
 
-            Check(_capture.RenderStream(null, MediaType.Video, _source, null, tee), "Connect source video to tee");
-            Check(_capture.RenderStream(null, MediaType.Video, tee, null, renderer), "Connect preview");
             Check(_capture.RenderStream(null, MediaType.Video, tee, rgb2yuv, h264), "Connect H.264");
             Check(_capture.RenderStream(null, MediaType.Video, h264, null, mux), "Connect MP4 video");
 
@@ -115,7 +120,6 @@ namespace VisioForge.Samples.H264V10
                 }
 
                 Check(_capture.RenderStream(null, MediaType.Audio, _audioSource, aac, mux), "Connect AAC");
-                ConfigureAac(aac, audioBitrateKbps);
             }
 
             if (fileSource)
@@ -179,15 +183,14 @@ namespace VisioForge.Samples.H264V10
 
             if (_control != null)
             {
+                // _control and _events are casts of the graph's RCW; only _graph is released.
                 _control.Stop();
-                Marshal.ReleaseComObject(_control);
                 _control = null;
             }
 
             if (_events != null)
             {
                 _events.SetNotifyWindow(IntPtr.Zero, 0, IntPtr.Zero);
-                Marshal.ReleaseComObject(_events);
                 _events = null;
             }
 
@@ -227,7 +230,8 @@ namespace VisioForge.Samples.H264V10
             IntelVideoEncoderParams parameters;
             Check(encoder.GetParams(out parameters), "Read H.264 settings");
             parameters.rc_control.rc_method = IntelVideoEncoderRCMethod.RC_CBR;
-            parameters.rc_control.bitrate = (uint)(videoBitrateKbps * 1000);
+            // Kilobits per second.
+            parameters.rc_control.bitrate = (uint)videoBitrateKbps;
             Check(encoder.SetParams2(parameters), "Set H.264 bitrate");
         }
 

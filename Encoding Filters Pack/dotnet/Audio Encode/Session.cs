@@ -129,8 +129,9 @@ namespace VisioForge.Samples.AudioEncode
                 }
 
                 Check(sink.SetFileName(outputPath, null), "Set output path");
-                Check(_capture.RenderStream(null, MediaType.Audio, _source, aac, mux), "Connect AAC");
+                // The AAC encoder takes its bitrate only before its output pin is connected.
                 ConfigureAac(aac, rate);
+                Check(_capture.RenderStream(null, MediaType.Audio, _source, aac, mux), "Connect AAC");
             }
 
             if (fileSource)
@@ -176,15 +177,14 @@ namespace VisioForge.Samples.AudioEncode
         {
             if (_control != null)
             {
+                // _control and _events are casts of the graph's RCW; only _graph is released.
                 _control.Stop();
-                Marshal.ReleaseComObject(_control);
                 _control = null;
             }
 
             if (_events != null)
             {
                 _events.SetNotifyWindow(IntPtr.Zero, 0, IntPtr.Zero);
-                Marshal.ReleaseComObject(_events);
                 _events = null;
             }
 

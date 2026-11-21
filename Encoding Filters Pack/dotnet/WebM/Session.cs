@@ -119,13 +119,16 @@ namespace VisioForge.Samples.WebM
             }
 
             _window = (IVideoWindow)renderer;
+
+            Check(_capture.RenderStream(null, MediaType.Video, _source, null, tee), "Connect source video to tee");
+            Check(_capture.RenderStream(null, MediaType.Video, tee, null, renderer), "Connect preview");
+
+            // The renderer has a window only once its input pin is connected.
             Check(_window.put_Owner(preview), "Set preview owner");
             Check(_window.put_WindowStyle(WindowStyle.Child | WindowStyle.ClipChildren), "Set preview style");
             PlacePreview(previewWidth, previewHeight);
             Check(_window.put_Visible(OABool.True), "Show preview");
 
-            Check(_capture.RenderStream(null, MediaType.Video, _source, null, tee), "Connect source video to tee");
-            Check(_capture.RenderStream(null, MediaType.Video, tee, null, renderer), "Connect preview");
             Check(_capture.RenderStream(null, MediaType.Video, tee, converter, vp8), "Connect VP8");
             ConnectFirstFree(_graph, vp8, mux, "Connect VP8 to the muxer");
             ConnectFirstFree(_graph, mux, writer, "Connect the muxer to the file writer");
@@ -201,15 +204,14 @@ namespace VisioForge.Samples.WebM
 
             if (_control != null)
             {
+                // _control and _events are casts of the graph's RCW; only _graph is released.
                 _control.Stop();
-                Marshal.ReleaseComObject(_control);
                 _control = null;
             }
 
             if (_events != null)
             {
                 _events.SetNotifyWindow(IntPtr.Zero, 0, IntPtr.Zero);
-                Marshal.ReleaseComObject(_events);
                 _events = null;
             }
 

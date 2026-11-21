@@ -484,6 +484,23 @@ void CAudioEncodeDlg::OnStart()
     }
     else
     {
+        if (kind != 0)
+        {
+            // The AAC encoder takes its bitrate only before its output pin is connected.
+            IVFAACEncoder* aac = NULL;
+            hr = encoder->QueryInterface(kIidAac, (void**)&aac);
+            if (SUCCEEDED(hr) && aac != NULL)
+            {
+                hr = aac->SetBitRate((UINT32)rate * 1000);
+                aac->Release();
+            }
+
+            if (Failed(hr, L"Set AAC bitrate"))
+            {
+                goto cleanup;
+            }
+        }
+
         hr = m_capture->RenderStream(NULL, &MEDIATYPE_Audio, source, encoder, sink);
         if (Failed(hr, kind == 0 ? L"Connect LAME" : L"Connect AAC"))
         {
@@ -501,21 +518,6 @@ void CAudioEncodeDlg::OnStart()
             }
 
             if (Failed(hr, L"Set MP3 bitrate"))
-            {
-                goto cleanup;
-            }
-        }
-        else
-        {
-            IVFAACEncoder* aac = NULL;
-            hr = encoder->QueryInterface(kIidAac, (void**)&aac);
-            if (SUCCEEDED(hr) && aac != NULL)
-            {
-                hr = aac->SetBitRate((UINT32)rate * 1000);
-                aac->Release();
-            }
-
-            if (Failed(hr, L"Set AAC bitrate"))
             {
                 goto cleanup;
             }

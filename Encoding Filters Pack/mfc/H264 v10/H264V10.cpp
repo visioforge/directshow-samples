@@ -291,7 +291,8 @@ void CH264V10Dlg::OnStart()
         if (SUCCEEDED(hr))
         {
             parameters.rate.method = 1;
-            parameters.rate.bitrate = (unsigned)videoKbps * 1000;
+            // Kilobits per second.
+            parameters.rate.bitrate = (unsigned)videoKbps;
             hr = encoder->SetParams2(parameters);
         }
         encoder->Release();
@@ -323,8 +324,24 @@ void CH264V10Dlg::OnStart()
     {
         hr = AddByClsid(m_graph, kClsidAac, L"AAC encoder", &aac);
         if (Failed(hr, L"Add the AAC encoder. Install the Encoding Filters Pack.")) goto cleanup;
+
+        // The AAC encoder takes its bitrate only before its output pin is connected.
+        IVFAACEncoder* aacSettings = NULL;
+        hr = aac->QueryInterface(kIID_Aac, (void**)&aacSettings);
+        if (SUCCEEDED(hr))
+        {
+            hr = aacSettings->SetBitRate((unsigned)audioKbps * 1000);
+            aacSettings->Release();
+        }
+        if (Failed(hr, L"Set the AAC bitrate")) goto cleanup;
     }
 
+    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, source, NULL, tee);
+    if (Failed(hr, L"Connect the source to the tee")) goto cleanup;
+    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, tee, NULL, renderer);
+    if (Failed(hr, L"Connect the preview")) goto cleanup;
+
+    // The renderer has a window only once its input pin is connected.
     hr = renderer->QueryInterface(IID_IVideoWindow, (void**)&m_window);
     if (Failed(hr, L"Get the preview window")) goto cleanup;
     preview = GetDlgItem(IDC_PREVIEW);
@@ -334,10 +351,6 @@ void CH264V10Dlg::OnStart()
     m_window->SetWindowPosition(0, 0, previewRect.right, previewRect.bottom);
     m_window->put_Visible(OATRUE);
 
-    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, source, NULL, tee);
-    if (Failed(hr, L"Connect the source to the tee")) goto cleanup;
-    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, tee, NULL, renderer);
-    if (Failed(hr, L"Connect the preview")) goto cleanup;
     hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, tee, rgb, h264);
     if (Failed(hr, L"Connect H.264")) goto cleanup;
     hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, h264, NULL, mux);
@@ -353,14 +366,6 @@ void CH264V10Dlg::OnStart()
         }
         hr = m_capture->RenderStream(NULL, &MEDIATYPE_Audio, audioSource, aac, mux);
         if (Failed(hr, L"Connect AAC")) goto cleanup;
-        IVFAACEncoder* aacSettings = NULL;
-        hr = aac->QueryInterface(kIID_Aac, (void**)&aacSettings);
-        if (SUCCEEDED(hr))
-        {
-            hr = aacSettings->SetBitRate((unsigned)audioKbps * 1000);
-            aacSettings->Release();
-        }
-        if (Failed(hr, L"Set the AAC bitrate")) goto cleanup;
     }
 
     if (fileSource)

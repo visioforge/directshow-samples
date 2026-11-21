@@ -122,13 +122,16 @@ namespace VisioForge.Samples.FileEncode
             ConfigureMux(muxFilter, encoder, videoBitrateKbps, rateControl, mux, encodeAudio, audioBitrateKbps, outputPath, fileSource);
 
             _window = (IVideoWindow)renderer;
+
+            Check(_capture.RenderStream(null, MediaType.Video, _source, null, tee), "Connect source video to tee");
+            Check(_capture.RenderStream(null, MediaType.Video, tee, null, renderer), "Connect preview");
+
+            // The renderer has a window only once its input pin is connected.
             Check(_window.put_Owner(preview), "Set preview owner");
             Check(_window.put_WindowStyle(WindowStyle.Child | WindowStyle.ClipChildren), "Set preview style");
             PlacePreview(previewWidth, previewHeight);
             Check(_window.put_Visible(OABool.True), "Show preview");
 
-            Check(_capture.RenderStream(null, MediaType.Video, _source, null, tee), "Connect source video to tee");
-            Check(_capture.RenderStream(null, MediaType.Video, tee, null, renderer), "Connect preview");
             Check(_capture.RenderStream(null, MediaType.Video, tee, rgb2yuv, muxFilter), "Connect encoder");
 
             if (encodeAudio)
@@ -205,15 +208,14 @@ namespace VisioForge.Samples.FileEncode
 
             if (_control != null)
             {
+                // _control and _events are casts of the graph's RCW; only _graph is released.
                 _control.Stop();
-                Marshal.ReleaseComObject(_control);
                 _control = null;
             }
 
             if (_events != null)
             {
                 _events.SetNotifyWindow(IntPtr.Zero, 0, IntPtr.Zero);
-                Marshal.ReleaseComObject(_events);
                 _events = null;
             }
 

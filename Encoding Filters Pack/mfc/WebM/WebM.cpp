@@ -433,6 +433,12 @@ void CWebMDlg::OnStart()
     }
     if (Failed(hr, L"Set the output path")) goto cleanup;
 
+    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, source, NULL, tee);
+    if (Failed(hr, L"Connect the source to the tee")) goto cleanup;
+    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, tee, NULL, renderer);
+    if (Failed(hr, L"Connect the preview")) goto cleanup;
+
+    // The renderer has a window only once its input pin is connected.
     hr = renderer->QueryInterface(IID_IVideoWindow, (void**)&m_window);
     if (Failed(hr, L"Get the preview window")) goto cleanup;
     CWnd* preview = GetDlgItem(IDC_PREVIEW);
@@ -443,10 +449,6 @@ void CWebMDlg::OnStart()
     m_window->SetWindowPosition(0, 0, previewRect.right, previewRect.bottom);
     m_window->put_Visible(OATRUE);
 
-    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, source, NULL, tee);
-    if (Failed(hr, L"Connect the source to the tee")) goto cleanup;
-    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, tee, NULL, renderer);
-    if (Failed(hr, L"Connect the preview")) goto cleanup;
     hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, tee, converter, vp8);
     if (Failed(hr, L"Connect VP8")) goto cleanup;
     hr = ConnectFree(vp8, mux);
