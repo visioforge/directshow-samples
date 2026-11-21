@@ -29,13 +29,16 @@ namespace VisioForge.Samples.AudioEncode
 
     /// <summary>
     /// Audio-only file. MP3 is LAME into a File Writer. AAC is the v10 encoder into the v10 MP4 muxer.
-    /// FLAC is the Xiph encoder into the Dump filter.
+    /// FLAC is the FFmpeg encoder writing Matroska audio.
     /// </summary>
     internal sealed class Session
     {
         public const int GraphNotifyMessage = 0x8000 + 1;
 
         private const string LicenseKey = "";
+
+        private const int FormatMkv = 2;      // FFMPEG_SINK_FORMAT_MKV
+        private const int AudioCodecFlac = 4; // FFMPEG_SINK_AUDIO_CODEC_FLAC
 
         private IFilterGraph2 _graph;
         private ICaptureGraphBuilder2 _capture;
@@ -74,10 +77,6 @@ namespace VisioForge.Samples.AudioEncode
                 Check(_graph.AddFilter(_source, audioDevice.Name), "Add audio device");
             }
 
-            if (kind == 2 && rate > 8)
-            {
-                rate = 8;
-            }
 
             if (kind == 0)
             {
@@ -96,19 +95,28 @@ namespace VisioForge.Samples.AudioEncode
             }
             else if (kind == 2)
             {
-                var flac = AddFromClsid(DSFilterInitInfoConsts.VFXiphFLACEncoder.CLSID, "FLAC encoder");
-                var dump = AddFromClsid(DSFilterInitInfoConsts.VFDump.CLSID, "Dump");
-                ApplyLicense(flac);
-                var sink = dump as IFileSinkFilter;
-                if (sink == null)
+                var encoder = AddFromClsid(DSFilterInitInfoConsts.VFFFMPEGEncoder.CLSID, "FFmpeg encoder");
+                ApplyLicense(encoder);
+                var settings = encoder as IFFmpegSinkSettings;
+                if (settings == null)
                 {
-                    throw new InvalidOperationException("The Dump filter has no file sink.");
+                    throw new InvalidOperationException("The FFmpeg encoder has no configuration interface.");
                 }
 
-                Check(sink.SetFileName(outputPath, null), "Set output path");
-                Check(_capture.RenderStream(null, MediaType.Audio, _source, null, flac), "Connect FLAC");
-                ConfigureFlac(flac, rate);
-                Check(_capture.RenderStream(null, MediaType.Audio, flac, null, dump), "Connect the Dump filter");
+                Check(settings.SetFormat(FormatMkv), "Set container");
+                Check(((IFileSinkFilter)encoder).SetFileName(outputPath, null), "Set output path");
+                Check(_capture.RenderStream(null, MediaType.Audio, _source, null, encoder), "Connect the FFmpeg encoder");
+
+                // The encoder creates its input pin on connection; the pin takes the codec.
+                var pin = DsFindPin.ByDirection(encoder, PinDirection.Input, 0);
+                try
+                {
+                    Check(((IFFmpegSinkPinSettings)pin).SetAudioCodec(AudioCodecFlac), "Set FLAC");
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(pin);
+                }
             }
             else
             {
@@ -234,20 +242,6 @@ namespace VisioForge.Samples.AudioEncode
             Check(encoder.SetBitRate((uint)(bitrateKbps * 1000)), "Set AAC bitrate");
         }
 
-        private static void ConfigureFlac(IBaseFilter filter, int level)
-        {
-            var encoder = filter as IFLACEncodeSettings;
-            if (encoder == null)
-            {
-                throw new InvalidOperationException("The FLAC encoder has no configuration interface.");
-            }
-
-            if (!encoder.setEncodingLevel((uint)level))
-            {
-                throw new InvalidOperationException("Set FLAC level failed.");
-            }
-        }
-
         private IBaseFilter Add(IBaseFilter filter, string name)
         {
             Check(_graph.AddFilter(filter, name), "Add " + name);
@@ -323,5 +317,53 @@ namespace VisioForge.Samples.AudioEncode
             Marshal.ReleaseComObject(filter);
             filter = null;
         }
+    }
+
+    [ComImport]
+    [Guid("CAEC87C3-24B5-404C-9985-FA18D2B78A4A")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    internal interface IFFmpegSinkSettings
+    {
+        [PreserveSig]
+        int SetFormat(int format);
+    }
+
+    /// <summary>
+    /// Methods stay in vtable order through SetAudioCodec.
+    /// </summary>
+    [ComImport]
+    [Guid("496D3BA7-0630-499E-A730-577D4A049F9F")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    internal interface IFFmpegSinkPinSettings
+    {
+        [PreserveSig]
+        int SetVideoCodec(int codec);
+
+        [PreserveSig]
+        int SetVideoBitRate(int bitRate);
+
+        [PreserveSig]
+        int SetVideoWidth(int width);
+
+        [PreserveSig]
+        int SetVideoHeight(int height);
+
+        [PreserveSig]
+        int SetVideoProfile(int profile);
+
+        [PreserveSig]
+        int SetVideoLevel(int level);
+
+        [PreserveSig]
+        int SetVideoGOPSize(int gopSize);
+
+        [PreserveSig]
+        int SetVideoMaxBFrames(int maxBFrames);
+
+        [PreserveSig]
+        int SetVideoThreadCount(int threadCount);
+
+        [PreserveSig]
+        int SetAudioCodec(int codec);
     }
 }

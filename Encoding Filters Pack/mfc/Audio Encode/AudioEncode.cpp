@@ -18,14 +18,18 @@ static const GUID kClsidMp4 =
 static const GUID kIidMp4 =
 { 0x9E26CE8B, 0x6708, 0x4535, { 0xAA, 0xA4, 0x23, 0xF9, 0xA9, 0x7C, 0x79, 0x37 } };
 
-static const GUID kClsidFlac =
-{ 0xBE5B270D, 0x73AA, 0x4368, { 0xAA, 0x56, 0xBF, 0xBC, 0x87, 0x0B, 0x52, 0xCF } };
+static const GUID kClsidFfmpeg =
+{ 0x69F244AB, 0x31A9, 0x4B74, { 0x81, 0xCB, 0xCF, 0x8C, 0x9F, 0xAC, 0xB2, 0xEC } };
 
-static const GUID kIidFlac =
-{ 0xA6096781, 0x2A65, 0x4540, { 0xA5, 0x36, 0x01, 0x12, 0x35, 0xD0, 0xA5, 0xFE } };
+static const GUID kIidSinkSettings =
+{ 0xCAEC87C3, 0x24B5, 0x404C, { 0x99, 0x85, 0xFA, 0x18, 0xD2, 0xB7, 0x8A, 0x4A } };
 
-static const GUID kClsidDump =
-{ 0x83DF94EE, 0x5A0A, 0x4730, { 0x98, 0x18, 0x97, 0x26, 0xCE, 0x11, 0x7C, 0xEC } };
+static const GUID kIidPinSettings =
+{ 0x496D3BA7, 0x0630, 0x499E, { 0xA7, 0x30, 0x57, 0x7D, 0x4A, 0x04, 0x9F, 0x9F } };
+
+// FFMPEG_SINK_FORMAT_MKV and FFMPEG_SINK_AUDIO_CODEC_FLAC.
+static const int kFormatMkv = 2;
+static const int kAudioCodecFlac = 4;
 
 // Methods before set_Bitrate stay in the vtable so the bitrate call lands on the right slot.
 struct IAudioEncoderProperties : public IUnknown
@@ -52,11 +56,25 @@ struct IMP4V10MuxerConfig : public IUnknown
     virtual HRESULT STDMETHODCALLTYPE SetLiveDisabled(BOOL liveDisabled) = 0;
 };
 
-// canModifySettings stays in the vtable so setEncodingLevel lands on the right slot.
-struct IFLACEncodeSettings : public IUnknown
+// The container is set on the FFmpeg encoder.
+struct IFFmpegSinkSettings : public IUnknown
 {
-    virtual BOOL STDMETHODCALLTYPE canModifySettings() = 0;
-    virtual BOOL STDMETHODCALLTYPE setEncodingLevel(unsigned level) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetFormat(int format) = 0;
+};
+
+// The input pin takes the codec. Vtable order through SetAudioCodec.
+struct IFFmpegSinkPinSettings : public IUnknown
+{
+    virtual HRESULT STDMETHODCALLTYPE SetVideoCodec(int codec) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoBitRate(LONG bitRate) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoWidth(LONG width) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoHeight(LONG height) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoProfile(int profile) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoLevel(int level) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoGOPSize(LONG gopSize) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoMaxBFrames(LONG maxBFrames) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoThreadCount(LONG threadCount) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetAudioCodec(int codec) = 0;
 };
 
 namespace
@@ -91,7 +109,7 @@ namespace
     {
         if (kind == 2)
         {
-            return L".flac";
+            return L".mka";
         }
 
         if (kind == 1)
@@ -142,7 +160,7 @@ BOOL CAudioEncodeDlg::OnInitDialog()
     formats->SetItemData(mp3, 0);
     int aac = formats->AddString(L"AAC in MP4");
     formats->SetItemData(aac, 1);
-    int flac = formats->AddString(L"FLAC");
+    int flac = formats->AddString(L"FLAC in Matroska");
     formats->SetItemData(flac, 2);
     formats->SetCurSel(0);
 
@@ -200,25 +218,8 @@ void CAudioEncodeDlg::OnSourceMode()
 
 void CAudioEncodeDlg::OnFormatChanged()
 {
-    const int kind = SelectedFormat(this);
-    const int value = (int)GetDlgItemInt(IDC_BITRATE, NULL, FALSE);
-    if (kind == 2)
-    {
-        SetDlgItemText(IDC_UNIT, L"level");
-        if (value > 8)
-        {
-            SetDlgItemInt(IDC_BITRATE, 5, FALSE);
-        }
-    }
-    else
-    {
-        SetDlgItemText(IDC_UNIT, L"kbps");
-        if (value < 32)
-        {
-            SetDlgItemInt(IDC_BITRATE, 128, FALSE);
-        }
-    }
-
+    // FLAC is lossless and has no bitrate.
+    GetDlgItem(IDC_BITRATE)->EnableWindow(SelectedFormat(this) != 2);
     UpdateOutputName();
 }
 
@@ -235,7 +236,7 @@ void CAudioEncodeDlg::OnBrowseOutput()
 {
     const int kind = SelectedFormat(this);
     const wchar_t* extension = ExtensionFor(kind);
-    const wchar_t* title = kind == 2 ? L"FLAC" : kind == 1 ? L"MP4" : L"MP3";
+    const wchar_t* title = kind == 2 ? L"Matroska audio" : kind == 1 ? L"MP4" : L"MP3";
     wchar_t filter[64];
     wchar_t fileName[32];
     StringCchPrintfW(filter, 64, L"%s|*%s|All files|*.*||", title, extension);
@@ -302,14 +303,7 @@ void CAudioEncodeDlg::OnStart()
 
     const int kind = SelectedFormat(this);
     int rate = (int)GetDlgItemInt(IDC_BITRATE, NULL, FALSE);
-    if (kind == 2)
-    {
-        if (rate > 8)
-        {
-            rate = 8;
-        }
-    }
-    else if (rate <= 0)
+    if (rate <= 0)
     {
         rate = 128;
     }
@@ -396,14 +390,24 @@ void CAudioEncodeDlg::OnStart()
     }
     else if (kind == 2)
     {
-        hr = AddByClsid(m_graph, kClsidFlac, L"FLAC encoder", &encoder);
-        if (Failed(hr, L"Add the FLAC encoder. Install the Encoding Filters Pack."))
+        // The FFmpeg encoder is the file sink too.
+        hr = AddByClsid(m_graph, kClsidFfmpeg, L"FFmpeg encoder", &encoder);
+        if (Failed(hr, L"Add the FFmpeg encoder. Install the Encoding Filters Pack."))
         {
             goto cleanup;
         }
 
-        hr = AddByClsid(m_graph, kClsidDump, L"Dump", &sink);
-        if (Failed(hr, L"Add the Dump filter. Install the Encoding Filters Pack."))
+        sink = encoder;
+        sink->AddRef();
+        IFFmpegSinkSettings* settings = NULL;
+        hr = encoder->QueryInterface(kIidSinkSettings, (void**)&settings);
+        if (SUCCEEDED(hr))
+        {
+            hr = settings->SetFormat(kFormatMkv);
+            settings->Release();
+        }
+
+        if (Failed(hr, L"Set the Matroska container"))
         {
             goto cleanup;
         }
@@ -454,30 +458,35 @@ void CAudioEncodeDlg::OnStart()
     if (kind == 2)
     {
         hr = m_capture->RenderStream(NULL, &MEDIATYPE_Audio, source, NULL, encoder);
-        if (Failed(hr, L"Connect FLAC"))
+        if (Failed(hr, L"Connect the FFmpeg encoder"))
         {
             goto cleanup;
         }
 
-        IFLACEncodeSettings* flac = NULL;
-        hr = encoder->QueryInterface(kIidFlac, (void**)&flac);
-        if (SUCCEEDED(hr) && flac != NULL)
+        // The encoder creates its input pin on connection; the pin takes the codec.
+        IEnumPins* pins = NULL;
+        IPin* pin = NULL;
+        IFFmpegSinkPinSettings* pinSettings = NULL;
+        hr = encoder->EnumPins(&pins);
+        if (SUCCEEDED(hr))
         {
-            if (!flac->setEncodingLevel((unsigned)rate))
-            {
-                hr = E_FAIL;
-            }
-
-            flac->Release();
+            hr = pins->Next(1, &pin, NULL) == S_OK ? S_OK : VFW_E_NOT_FOUND;
+            pins->Release();
         }
 
-        if (Failed(hr, L"Set the FLAC level"))
+        if (SUCCEEDED(hr))
         {
-            goto cleanup;
+            hr = pin->QueryInterface(kIidPinSettings, (void**)&pinSettings);
+            pin->Release();
         }
 
-        hr = m_capture->RenderStream(NULL, &MEDIATYPE_Audio, encoder, NULL, sink);
-        if (Failed(hr, L"Connect the Dump filter"))
+        if (SUCCEEDED(hr))
+        {
+            hr = pinSettings->SetAudioCodec(kAudioCodecFlac);
+            pinSettings->Release();
+        }
+
+        if (Failed(hr, L"Set FLAC"))
         {
             goto cleanup;
         }

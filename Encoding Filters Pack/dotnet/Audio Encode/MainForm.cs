@@ -79,7 +79,7 @@ namespace VisioForge.Samples.AudioEncode
             _formats.DropDownStyle = ComboBoxStyle.DropDownList;
             _formats.Items.Add(new FormatChoice("MP3 (LAME)", 0, ".mp3"));
             _formats.Items.Add(new FormatChoice("AAC in MP4", 1, ".mp4"));
-            _formats.Items.Add(new FormatChoice("FLAC", 2, ".flac"));
+            _formats.Items.Add(new FormatChoice("FLAC in Matroska", 2, ".mka"));
             _formats.SelectedIndex = 0;
             _formats.SetBounds(16, 138, 200, 24);
             _formats.SelectedIndexChanged += delegate { ApplyFormatUi(); };
@@ -156,31 +156,8 @@ namespace VisioForge.Samples.AudioEncode
                 return;
             }
 
-            if (format.Kind == 2)
-            {
-                _rateLabel.Text = "Level (0-8)";
-                _bitrate.Minimum = 0;
-                if (_bitrate.Value > 8)
-                {
-                    _bitrate.Value = 5;
-                }
-
-                _bitrate.Maximum = 8;
-                _bitrate.Increment = 1;
-            }
-            else
-            {
-                _rateLabel.Text = "Bitrate (kbps)";
-                _bitrate.Maximum = 320;
-                if (_bitrate.Value < 32)
-                {
-                    _bitrate.Value = 128;
-                }
-
-                _bitrate.Minimum = 32;
-                _bitrate.Increment = 16;
-            }
-
+            // FLAC is lossless and has no bitrate.
+            _bitrate.Enabled = format.Kind != 2;
             ApplyExtension();
         }
 
@@ -218,7 +195,7 @@ namespace VisioForge.Samples.AudioEncode
             var format = (FormatChoice)_formats.SelectedItem;
             using (var dialog = new SaveFileDialog())
             {
-                dialog.Filter = format.Kind == 2 ? "FLAC|*.flac" : format.Kind == 0 ? "MP3|*.mp3" : "MP4|*.mp4";
+                dialog.Filter = format.Kind == 2 ? "Matroska audio|*.mka" : format.Kind == 0 ? "MP3|*.mp3" : "MP4|*.mp4";
                 dialog.FileName = "audio" + format.Extension;
                 if (dialog.ShowDialog(this) == DialogResult.OK)
                 {
