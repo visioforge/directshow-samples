@@ -8,4 +8,4 @@ The preview and the encoder share the video through an Infinite Pin Tee. A file 
 
 `FileEncode.csproj` targets `net10.0-windows` x64. `FileEncode.net48.csproj` targets `net48` x64. Both compile the same source. Put a license key in `Session.LicenseKey` after purchase. An empty key runs the trial.
 
-Install the Encoding Filters Pack before running the sample.
+Install the Encoding Filters Pack before running the sample. HLS needs the Encoding Filters Pack redist with `VisioForge_MFT64.dll` 2026.11.10 or later (`VisioForge_MFT.dll` for 32-bit); an older one crashes when HLS starts.
