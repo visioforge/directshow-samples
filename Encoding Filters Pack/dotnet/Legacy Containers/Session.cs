@@ -7,16 +7,25 @@ namespace VisioForge.Samples.LegacyContainers
 {
     internal sealed class FormatChoice
     {
-        public FormatChoice(string caption, int format, string extension)
+        public FormatChoice(string caption, int format, int videoCodec, int audioCodec, string extension)
         {
             Caption = caption;
             Format = format;
+            VideoCodec = videoCodec;
+            AudioCodec = audioCodec;
             Extension = extension;
         }
 
         public string Caption { get; private set; }
 
+        // FFMPEG_SINK_FORMAT value.
         public int Format { get; private set; }
+
+        // FFMPEG_SINK_VIDEO_CODEC value; 0 is the container's default codec.
+        public int VideoCodec { get; private set; }
+
+        // FFMPEG_SINK_AUDIO_CODEC value.
+        public int AudioCodec { get; private set; }
 
         public string Extension { get; private set; }
 
@@ -27,7 +36,7 @@ namespace VisioForge.Samples.LegacyContainers
     }
 
     /// <summary>
-    /// Legacy FFmpeg encoder. The settings struct is passed by value and stays blittable.
+    /// FFmpeg encoder. The container is set on the filter, the codecs and bitrates on each connected input pin.
     /// Video and audio bitrates are bits per second.
     /// </summary>
     internal sealed class Session
@@ -54,7 +63,7 @@ namespace VisioForge.Samples.LegacyContainers
             string sourceFile,
             DsDevice videoDevice,
             DsDevice audioDevice,
-            int format,
+            FormatChoice format,
             int width,
             int height,
             int videoBitrateKbps,
@@ -62,7 +71,6 @@ namespace VisioForge.Samples.LegacyContainers
             int audioBitrateKbps,
             int sampleRate,
             int channels,
-            int tvSystem,
             string outputPath)
         {
             Stop();
@@ -96,18 +104,14 @@ namespace VisioForge.Samples.LegacyContainers
             var renderer = Add((IBaseFilter)new VideoRenderer(), "Preview");
             var encoder = AddFromClsid(DSFilterInitInfoConsts.VFFFMPEGEncoder.CLSID, "FFmpeg encoder");
             ApplyLicense(encoder);
-            ConfigureEncoder(
-                encoder,
-                outputPath,
-                format,
-                width,
-                height,
-                videoBitrateKbps * 1000,
-                encodeAudio,
-                audioBitrateKbps * 1000,
-                sampleRate,
-                channels,
-                tvSystem);
+            var sink = encoder as IFFmpegSinkSettings;
+            if (sink == null)
+            {
+                throw new InvalidOperationException("The FFmpeg encoder has no configuration interface.");
+            }
+
+            Check(sink.SetFormat(format.Format), "Set container");
+            Check(((IFileSinkFilter)encoder).SetFileName(outputPath, null), "Set output path");
 
             _window = (IVideoWindow)renderer;
 
@@ -131,6 +135,9 @@ namespace VisioForge.Samples.LegacyContainers
 
                 Check(_capture.RenderStream(null, MediaType.Audio, _audioSource, null, encoder), "Connect audio");
             }
+
+            // The encoder creates a pin per connection; each pin takes the settings of its stream.
+            ConfigurePins(encoder, format, width, height, videoBitrateKbps * 1000, audioBitrateKbps * 1000, sampleRate, channels);
 
             if (fileSource)
             {
@@ -229,92 +236,58 @@ namespace VisioForge.Samples.LegacyContainers
             }
         }
 
-        // VCD is 2, SVCD is 5, DVD is 6. Those discs are 4:3. Other containers follow the picture.
-        private static void DisplayAspect(int format, int width, int height, out int ratioW, out int ratioH)
-        {
-            if (format == 2 || format == 5 || format == 6)
-            {
-                ratioW = 4;
-                ratioH = 3;
-                return;
-            }
-
-            if (width < 1)
-            {
-                width = 1;
-            }
-
-            if (height < 1)
-            {
-                height = 1;
-            }
-
-            var divisor = width;
-            var rest = height;
-            while (rest != 0)
-            {
-                var next = divisor % rest;
-                divisor = rest;
-                rest = next;
-            }
-
-            ratioW = width / divisor;
-            ratioH = height / divisor;
-        }
-
-        private static void ConfigureEncoder(
-            IBaseFilter filter,
-            string outputPath,
-            int format,
+        private static void ConfigurePins(
+            IBaseFilter encoder,
+            FormatChoice format,
             int width,
             int height,
             int videoBitrate,
-            bool encodeAudio,
             int audioBitrate,
             int sampleRate,
-            int channels,
-            int tvSystem)
+            int channels)
         {
-            var encoder = filter as IVFFFMPEGEncoder;
-            if (encoder == null)
+            for (var index = 0; ; index++)
             {
-                throw new InvalidOperationException("The FFmpeg encoder has no configuration interface.");
-            }
-
-            var filename = Marshal.StringToCoTaskMemUni(outputPath);
-            int aspectW;
-            int aspectH;
-            DisplayAspect(format, width, height, out aspectW, out aspectH);
-            try
-            {
-                var settings = new FfmpegSettings
+                var pin = DsFindPin.ByDirection(encoder, PinDirection.Input, index);
+                if (pin == null)
                 {
-                    Filename = filename,
-                    AudioAvailable = encodeAudio ? 1 : 0,
-                    AudioBitrate = audioBitrate,
-                    AudioSamplerate = sampleRate,
-                    AudioChannels = channels,
-                    VideoWidth = width,
-                    VideoHeight = height,
-                    AspectRatioW = aspectW,
-                    AspectRatioH = aspectH,
-                    VideoBitrate = videoBitrate,
-                    VideoMaxRate = videoBitrate,
-                    VideoMinRate = videoBitrate / 2,
-                    VideoBufferSize = videoBitrate / 8,
-                    Interlace = 0,
-                    VideoGopSize = 18,
-                    TVSystem = tvSystem,
-                    OutputFormat = format
-                };
-                encoder.set_settings(settings);
-            }
-            finally
-            {
-                Marshal.FreeCoTaskMem(filename);
+                    return;
+                }
+
+                try
+                {
+                    var type = new AMMediaType();
+                    if (pin.ConnectionMediaType(type) != 0)
+                    {
+                        continue;
+                    }
+
+                    var major = type.majorType;
+                    DsUtils.FreeAMMediaType(type);
+                    var settings = (IFFmpegSinkPinSettings)pin;
+                    if (major == MediaType.Video)
+                    {
+                        Check(settings.SetVideoCodec(format.VideoCodec), "Set video codec");
+                        Check(settings.SetVideoBitRate(videoBitrate), "Set video bitrate");
+                        Check(settings.SetVideoWidth(width), "Set output width");
+                        Check(settings.SetVideoHeight(height), "Set output height");
+                    }
+                    else if (major == MediaType.Audio)
+                    {
+                        Check(settings.SetAudioCodec(format.AudioCodec), "Set audio codec");
+                        Check(settings.SetAudioBitRate(audioBitrate), "Set audio bitrate");
+                        Check(settings.SetAudioSampleRate(sampleRate), "Set sample rate");
+
+                        // SPEAKER_FRONT_CENTER for mono, SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT for stereo.
+                        Check(settings.SetAudioChannelMask(channels == 1 ? 0x4u : 0x3u), "Set channels");
+                    }
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(pin);
+                }
             }
         }
-
         private IBaseFilter Add(IBaseFilter filter, string name)
         {
             Check(_graph.AddFilter(filter, name), "Add " + name);
@@ -392,34 +365,60 @@ namespace VisioForge.Samples.LegacyContainers
         }
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct FfmpegSettings
-    {
-        public IntPtr Filename;
-        public int AudioAvailable;
-        public int AudioBitrate;
-        public int AudioSamplerate;
-        public int AudioChannels;
-        public int VideoWidth;
-        public int VideoHeight;
-        public int AspectRatioW;
-        public int AspectRatioH;
-        public int VideoBitrate;
-        public int VideoMaxRate;
-        public int VideoMinRate;
-        public int VideoBufferSize;
-        public int Interlace;
-        public int VideoGopSize;
-        public int TVSystem;
-        public int OutputFormat;
-    }
-
     [ComImport]
-    [Guid("17B8FF7D-A67F-45CE-B425-0E4F607D8C60")]
+    [Guid("CAEC87C3-24B5-404C-9985-FA18D2B78A4A")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    internal interface IVFFFMPEGEncoder
+    internal interface IFFmpegSinkSettings
     {
         [PreserveSig]
-        void set_settings(FfmpegSettings settings);
+        int SetFormat(int format);
+    }
+
+    /// <summary>
+    /// Methods stay in vtable order through SetAudioChannelMask.
+    /// </summary>
+    [ComImport]
+    [Guid("496D3BA7-0630-499E-A730-577D4A049F9F")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    internal interface IFFmpegSinkPinSettings
+    {
+        [PreserveSig]
+        int SetVideoCodec(int codec);
+
+        [PreserveSig]
+        int SetVideoBitRate(int bitRate);
+
+        [PreserveSig]
+        int SetVideoWidth(int width);
+
+        [PreserveSig]
+        int SetVideoHeight(int height);
+
+        [PreserveSig]
+        int SetVideoProfile(int profile);
+
+        [PreserveSig]
+        int SetVideoLevel(int level);
+
+        [PreserveSig]
+        int SetVideoGOPSize(int gopSize);
+
+        [PreserveSig]
+        int SetVideoMaxBFrames(int maxBFrames);
+
+        [PreserveSig]
+        int SetVideoThreadCount(int threadCount);
+
+        [PreserveSig]
+        int SetAudioCodec(int codec);
+
+        [PreserveSig]
+        int SetAudioBitRate(int bitRate);
+
+        [PreserveSig]
+        int SetAudioSampleRate(int sampleRate);
+
+        [PreserveSig]
+        int SetAudioChannelMask(uint channelMask);
     }
 }

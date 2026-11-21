@@ -3,53 +3,52 @@
 static const GUID kClsidFfmpeg =
 { 0x69F244AB, 0x31A9, 0x4B74, { 0x81, 0xCB, 0xCF, 0x8C, 0x9F, 0xAC, 0xB2, 0xEC } };
 
-static const GUID kIidFfmpeg =
-{ 0x17B8FF7D, 0xA67F, 0x45CE, { 0xB4, 0x25, 0x0E, 0x4F, 0x60, 0x7D, 0x8C, 0x60 } };
+static const GUID kIidSinkSettings =
+{ 0xCAEC87C3, 0x24B5, 0x404C, { 0x99, 0x85, 0xFA, 0x18, 0xD2, 0xB7, 0x8A, 0x4A } };
 
-// Passed by value. Every field is a 4-byte int or a pointer so the layout stays blittable.
-struct CVFOutputSettings
+static const GUID kIidPinSettings =
+{ 0x496D3BA7, 0x0630, 0x499E, { 0xA7, 0x30, 0x57, 0x7D, 0x4A, 0x04, 0x9F, 0x9F } };
+
+// The container is set on the filter.
+struct IFFmpegSinkSettings : public IUnknown
 {
-    wchar_t* filename;
-    int audioAvailable;
-    int audioBitrate;
-    int audioSamplerate;
-    int audioChannels;
-    int videoWidth;
-    int videoHeight;
-    int aspectRatioW;
-    int aspectRatioH;
-    int videoBitrate;
-    int videoMaxRate;
-    int videoMinRate;
-    int videoBufferSize;
-    int interlace;
-    int videoGopSize;
-    int tvSystem;
-    int outputFormat;
+    virtual HRESULT STDMETHODCALLTYPE SetFormat(int format) = 0;
 };
 
-struct IVFFFMPEGEncoder : public IUnknown
+// Each connected input pin takes the settings of its stream. Vtable order through SetAudioChannelMask.
+struct IFFmpegSinkPinSettings : public IUnknown
 {
-    virtual void STDMETHODCALLTYPE set_settings(CVFOutputSettings settings) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoCodec(int codec) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoBitRate(LONG bitRate) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoWidth(LONG width) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoHeight(LONG height) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoProfile(int profile) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoLevel(int level) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoGOPSize(LONG gopSize) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoMaxBFrames(LONG maxBFrames) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoThreadCount(LONG threadCount) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetAudioCodec(int codec) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetAudioBitRate(LONG bitRate) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetAudioSampleRate(LONG sampleRate) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetAudioChannelMask(DWORD channelMask) = 0;
 };
-
 namespace
 {
     struct FormatItem
     {
         const wchar_t* name;
-        int format;
+        int format;      // FFMPEG_SINK_FORMAT
+        int videoCodec;  // FFMPEG_SINK_VIDEO_CODEC; 0 is the container's default codec
+        int audioCodec;  // FFMPEG_SINK_AUDIO_CODEC
         const wchar_t* extension;
     };
 
+    // FLV: Sorenson Spark (the container default) and MP3. MPEG-1 and MPEG-2 program streams: MP2 audio.
     const FormatItem kFormats[] =
     {
-        { L"FLV", 0, L".flv" },
-        { L"MPEG-1", 1, L".mpg" },
-        { L"MPEG-1 VCD", 2, L".mpg" },
-        { L"MPEG-2", 3, L".mpg" },
-        { L"MPEG-2 SVCD", 5, L".mpg" },
-        { L"MPEG-2 DVD", 6, L".mpg" }
+        { L"FLV", 3, 0, 2, L".flv" },
+        { L"MPEG-1", 11, 9, 1, L".mpg" },
+        { L"MPEG-2", 12, 10, 1, L".mpg" }
     };
 
     void EnsureParent(const wchar_t* path)
@@ -71,39 +70,60 @@ namespace
         return value > 0 ? value : fallback;
     }
 
-    // VCD is 2, SVCD is 5, DVD is 6. Those discs are 4:3. Other containers follow the picture.
-    void DisplayAspect(int format, int width, int height, int* ratioW, int* ratioH)
+    HRESULT ConfigurePins(IBaseFilter* encoder, const FormatItem& item, int width, int height, int videoBitrate,
+        int audioBitrate, int sampleRate, int channels)
     {
-        if (format == 2 || format == 5 || format == 6)
+        IEnumPins* pins = NULL;
+        HRESULT hr = encoder->EnumPins(&pins);
+        if (FAILED(hr))
         {
-            *ratioW = 4;
-            *ratioH = 3;
-            return;
+            return hr;
         }
 
-        if (width < 1)
+        IPin* pin = NULL;
+        while (SUCCEEDED(hr) && pins->Next(1, &pin, NULL) == S_OK)
         {
-            width = 1;
+            PIN_DIRECTION direction;
+            AM_MEDIA_TYPE type;
+            IFFmpegSinkPinSettings* settings = NULL;
+            if (SUCCEEDED(pin->QueryDirection(&direction)) && direction == PINDIR_INPUT &&
+                pin->ConnectionMediaType(&type) == S_OK)
+            {
+                const GUID major = type.majortype;
+                CoTaskMemFree(type.pbFormat);
+                if (type.pUnk != NULL)
+                {
+                    type.pUnk->Release();
+                }
+                hr = pin->QueryInterface(kIidPinSettings, (void**)&settings);
+                if (SUCCEEDED(hr) && major == MEDIATYPE_Video)
+                {
+                    settings->SetVideoCodec(item.videoCodec);
+                    settings->SetVideoBitRate(videoBitrate);
+                    settings->SetVideoWidth(width);
+                    settings->SetVideoHeight(height);
+                }
+                else if (SUCCEEDED(hr) && major == MEDIATYPE_Audio)
+                {
+                    settings->SetAudioCodec(item.audioCodec);
+                    settings->SetAudioBitRate(audioBitrate);
+                    settings->SetAudioSampleRate(sampleRate);
+                    // SPEAKER_FRONT_CENTER for mono, SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT for stereo.
+                    settings->SetAudioChannelMask(channels == 1 ? 0x4 : 0x3);
+                }
+
+                if (settings != NULL)
+                {
+                    settings->Release();
+                }
+            }
+
+            pin->Release();
         }
 
-        if (height < 1)
-        {
-            height = 1;
-        }
-
-        int divisor = width;
-        int rest = height;
-        while (rest != 0)
-        {
-            int next = divisor % rest;
-            divisor = rest;
-            rest = next;
-        }
-
-        *ratioW = width / divisor;
-        *ratioH = height / divisor;
-    }
-}
+        pins->Release();
+        return hr;
+    }}
 
 CLegacyApp theApp;
 
@@ -150,16 +170,11 @@ BOOL CLegacyDlg::OnInitDialog()
     for (int i = 0; i < (int)(sizeof(kFormats) / sizeof(kFormats[0])); ++i)
     {
         int index = formats->AddString(kFormats[i].name);
-        formats->SetItemData(index, (DWORD_PTR)kFormats[i].format);
+        formats->SetItemData(index, (DWORD_PTR)i);
     }
 
     formats->SetCurSel(0);
 
-    CComboBox* tv = (CComboBox*)GetDlgItem(IDC_TV);
-    tv->AddString(L"Default");
-    tv->AddString(L"PAL");
-    tv->AddString(L"NTSC");
-    tv->SetCurSel(0);
 
     FillDevices(CLSID_VideoInputDeviceCategory, *(CComboBox*)GetDlgItem(IDC_CAMERA_DEVICE), false);
     FillDevices(CLSID_AudioInputDeviceCategory, *(CComboBox*)GetDlgItem(IDC_AUDIO_DEVICE), true);
@@ -196,8 +211,7 @@ void CLegacyDlg::UpdateSourceMode()
 void CLegacyDlg::UpdateOutputName()
 {
     CComboBox* formats = (CComboBox*)GetDlgItem(IDC_FORMAT);
-    const int format = (int)formats->GetItemData(formats->GetCurSel());
-    const wchar_t* extension = format == 0 ? L".flv" : L".mpg";
+    const wchar_t* extension = kFormats[formats->GetItemData(formats->GetCurSel())].extension;
     wchar_t current[MAX_PATH];
     GetDlgItemText(IDC_OUTPUT, current, MAX_PATH);
     wchar_t directory[MAX_PATH];
@@ -236,11 +250,12 @@ void CLegacyDlg::OnBrowseSource()
 void CLegacyDlg::OnBrowseOutput()
 {
     CComboBox* formats = (CComboBox*)GetDlgItem(IDC_FORMAT);
-    const int format = (int)formats->GetItemData(formats->GetCurSel());
-    const wchar_t* extension = format == 0 ? L".flv" : L".mpg";
+    const wchar_t* extension = kFormats[formats->GetItemData(formats->GetCurSel())].extension;
     wchar_t filter[64];
     StringCchPrintfW(filter, 64, L"Output|*%s|All files|*.*||", extension);
-    CFileDialog dialog(FALSE, extension + 1, format == 0 ? L"encode.flv" : L"encode.mpg", OFN_OVERWRITEPROMPT, filter, this);
+    wchar_t name[MAX_PATH];
+    StringCchPrintfW(name, MAX_PATH, L"encode%s", extension);
+    CFileDialog dialog(FALSE, extension + 1, name, OFN_OVERWRITEPROMPT, filter, this);
     if (dialog.DoModal() == IDOK)
     {
         SetDlgItemText(IDC_OUTPUT, dialog.GetPathName());
@@ -313,9 +328,7 @@ void CLegacyDlg::OnStart()
     }
 
     CComboBox* formats = (CComboBox*)GetDlgItem(IDC_FORMAT);
-    CComboBox* tv = (CComboBox*)GetDlgItem(IDC_TV);
-    const int format = (int)formats->GetItemData(formats->GetCurSel());
-    const int tvSystem = tv->GetCurSel() < 0 ? 0 : tv->GetCurSel();
+    const FormatItem& format = kFormats[formats->GetItemData(formats->GetCurSel())];
     const bool encodeAudio = IsDlgButtonChecked(IDC_AUDIO) == BST_CHECKED;
     const int width = PositiveOr((int)GetDlgItemInt(IDC_WIDTH, NULL, FALSE), 1280);
     const int height = PositiveOr((int)GetDlgItemInt(IDC_HEIGHT, NULL, FALSE), 720);
@@ -330,9 +343,8 @@ void CLegacyDlg::OnStart()
     IBaseFilter* tee = NULL;
     IBaseFilter* renderer = NULL;
     IBaseFilter* encoder = NULL;
-    IVFFFMPEGEncoder* ffmpeg = NULL;
-    wchar_t filename[MAX_PATH];
-    CVFOutputSettings settings;
+    IFFmpegSinkSettings* sink = NULL;
+    IFileSinkFilter* fileSink = NULL;
     CWnd* preview = NULL;
     RECT previewRect;
 
@@ -431,33 +443,29 @@ void CLegacyDlg::OnStart()
         goto cleanup;
     }
 
-    hr = encoder->QueryInterface(kIidFfmpeg, (void**)&ffmpeg);
-    if (Failed(hr, L"Get the encoder settings"))
+    hr = encoder->QueryInterface(kIidSinkSettings, (void**)&sink);
+    if (SUCCEEDED(hr))
+    {
+        hr = sink->SetFormat(format.format);
+        sink->Release();
+    }
+
+    if (Failed(hr, L"Set the container"))
     {
         goto cleanup;
     }
 
-    StringCchCopyW(filename, MAX_PATH, output);
-    ZeroMemory(&settings, sizeof(settings));
-    settings.filename = filename;
-    settings.audioAvailable = encodeAudio ? 1 : 0;
-    settings.audioBitrate = audioBitrate;
-    settings.audioSamplerate = sampleRate;
-    settings.audioChannels = channels;
-    settings.videoWidth = width;
-    settings.videoHeight = height;
-    DisplayAspect(format, width, height, &settings.aspectRatioW, &settings.aspectRatioH);
-    settings.videoBitrate = videoBitrate;
-    settings.videoMaxRate = videoBitrate;
-    settings.videoMinRate = videoBitrate / 2;
-    settings.videoBufferSize = videoBitrate / 8;
-    settings.interlace = 0;
-    settings.videoGopSize = 18;
-    settings.tvSystem = tvSystem;
-    settings.outputFormat = format;
-    ffmpeg->set_settings(settings);
-    ffmpeg->Release();
+    hr = encoder->QueryInterface(IID_IFileSinkFilter, (void**)&fileSink);
+    if (SUCCEEDED(hr))
+    {
+        hr = fileSink->SetFileName(output, NULL);
+        fileSink->Release();
+    }
 
+    if (Failed(hr, L"Set the output path"))
+    {
+        goto cleanup;
+    }
     hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, source, NULL, tee);
     if (Failed(hr, L"Connect the source to the tee"))
     {
@@ -504,6 +512,13 @@ void CLegacyDlg::OnStart()
         {
             goto cleanup;
         }
+    }
+
+    // The encoder creates a pin per connection; each pin takes the settings of its stream.
+    hr = ConfigurePins(encoder, format, width, height, videoBitrate, audioBitrate, sampleRate, channels);
+    if (Failed(hr, L"Set the stream settings"))
+    {
+        goto cleanup;
     }
 
     if (fileSource)

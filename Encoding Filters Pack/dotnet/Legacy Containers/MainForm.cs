@@ -15,7 +15,6 @@ namespace VisioForge.Samples.LegacyContainers
         private readonly ComboBox _cameras = new ComboBox();
         private readonly ComboBox _audioDevices = new ComboBox();
         private readonly ComboBox _formats = new ComboBox();
-        private readonly ComboBox _tvSystem = new ComboBox();
         private readonly NumericUpDown _width = new NumericUpDown();
         private readonly NumericUpDown _height = new NumericUpDown();
         private readonly NumericUpDown _videoBitrate = new NumericUpDown();
@@ -95,22 +94,14 @@ namespace VisioForge.Samples.LegacyContainers
             formatLabel.Text = "Container";
             formatLabel.SetBounds(16, 160, 80, 18);
             _formats.DropDownStyle = ComboBoxStyle.DropDownList;
-            _formats.Items.Add(new FormatChoice("FLV", 0, ".flv"));
-            _formats.Items.Add(new FormatChoice("MPEG-1", 1, ".mpg"));
-            _formats.Items.Add(new FormatChoice("MPEG-1 VCD", 2, ".mpg"));
-            _formats.Items.Add(new FormatChoice("MPEG-2", 3, ".mpg"));
-            _formats.Items.Add(new FormatChoice("MPEG-2 SVCD", 5, ".mpg"));
-            _formats.Items.Add(new FormatChoice("MPEG-2 DVD", 6, ".mpg"));
+            // FLV: Sorenson Spark (the container default) and MP3. MPEG-1 and MPEG-2 program streams: MP2 audio.
+            _formats.Items.Add(new FormatChoice("FLV", 3, 0, 2, ".flv"));
+            _formats.Items.Add(new FormatChoice("MPEG-1", 11, 9, 1, ".mpg"));
+            _formats.Items.Add(new FormatChoice("MPEG-2", 12, 10, 1, ".mpg"));
             _formats.SelectedIndex = 0;
             _formats.SetBounds(16, 178, 180, 24);
             _formats.SelectedIndexChanged += delegate { ApplyExtension(); };
 
-            _tvSystem.DropDownStyle = ComboBoxStyle.DropDownList;
-            _tvSystem.Items.Add("Default");
-            _tvSystem.Items.Add("PAL");
-            _tvSystem.Items.Add("NTSC");
-            _tvSystem.SelectedIndex = 0;
-            _tvSystem.SetBounds(204, 178, 106, 24);
 
             var sizeLabel = new Label();
             sizeLabel.Text = "Output size";
@@ -178,7 +169,7 @@ namespace VisioForge.Samples.LegacyContainers
             options.Controls.AddRange(new Control[]
             {
                 _fileSource, _cameraSource, _sourceFile, _browseSource, _cameras,
-                audioLabel, _audioDevices, formatLabel, _formats, _tvSystem, sizeLabel, _width, _height,
+                audioLabel, _audioDevices, formatLabel, _formats, sizeLabel, _width, _height,
                 bitrateLabel, _videoBitrate, _encodeAudio, audioRateLabel, _audioBitrate, _sampleRate, _channels,
                 outputLabel, _output, _browseOutput, _start, _stop, _status
             });
@@ -320,7 +311,7 @@ namespace VisioForge.Samples.LegacyContainers
                     _sourceFile.Text,
                     video,
                     audio,
-                    format.Format,
+                    format,
                     (int)_width.Value,
                     (int)_height.Value,
                     (int)_videoBitrate.Value,
@@ -328,7 +319,6 @@ namespace VisioForge.Samples.LegacyContainers
                     (int)_audioBitrate.Value,
                     (int)_sampleRate.Value,
                     (int)_channels.Value,
-                    _tvSystem.SelectedIndex,
                     output);
 
                 _start.Enabled = false;
