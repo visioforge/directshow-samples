@@ -139,9 +139,9 @@ BOOL CAudioEncodeDlg::OnInitDialog()
 
     CComboBox* formats = (CComboBox*)GetDlgItem(IDC_FORMAT);
     int mp3 = formats->AddString(L"MP3 (LAME)");
-    formats->SetItemData(mp3, 1);
+    formats->SetItemData(mp3, 0);
     int aac = formats->AddString(L"AAC in MP4");
-    formats->SetItemData(aac, 0);
+    formats->SetItemData(aac, 1);
     int flac = formats->AddString(L"FLAC");
     formats->SetItemData(flac, 2);
     formats->SetCurSel(0);
