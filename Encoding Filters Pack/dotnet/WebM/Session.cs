@@ -432,11 +432,11 @@ namespace VisioForge.Samples.WebM
     }
 
     /// <summary>
-    /// x64 VP8 encoder. Methods stay in vtable order through SetTargetBitrate.
-    /// SetTargetBitrate is kilobits per second.
+    /// 32-bit VP8 encoder: the pack ships the WebM filters as 32-bit only.
+    /// Methods stay in vtable order through SetTargetBitrate. SetTargetBitrate is kilobits per second.
     /// </summary>
     [ComImport]
-    [Guid("ED3110FE-5211-11DF-94AF-0026B977EEAA")]
+    [Guid("ED311151-5211-11DF-94AF-0026B977EEAA")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface IVP8Encoder
     {
