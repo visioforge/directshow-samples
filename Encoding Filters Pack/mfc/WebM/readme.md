@@ -1,9 +1,11 @@
 # WebM (MFC)
 
-Records a file or a camera to WebM: VP8 video and Vorbis audio. The pack ships the WebM filters as 32-bit only, so the project builds for Win32 and uses the 32-bit `IVP8Encoder` interface. `SetTargetBitrate` is kilobits per second.
+Records a file or a camera to WebM: VP8 video with Vorbis audio, or VP9 video with Opus audio.
 
-The WebM muxer is not the file sink. The sample connects it to a standard File Writer. Video is converted to I420 or YV12 before VP8. A file source uses the best-quality deadline. A camera uses the realtime deadline and no frame lag.
+The container is set on the FFmpeg encoder with `IFFmpegSinkSettings.SetFormat` (WebM), and the output path with `IFileSinkFilter`. The encoder adds an input pin for each connection. Once the graph is connected, the sample sets the codecs and the video bitrate on each pin through `IFFmpegSinkPinSettings`. The bitrate is bits per second. The form asks for kilobits per second and multiplies. The picture keeps the source size. The preview and the encoder share the video through an Infinite Pin Tee.
 
-The project is Visual Studio 2022 (`v143`), MFC in a shared DLL, Unicode, Win32. Put a license key in `kLicenseKey` in `../common/Graph.h` after purchase. An empty key runs the trial.
+The encoder takes the frame rate from the video type. A source that leaves it unset fails in Run with "The parameter is incorrect". The Windows WMV decoder is one such source. A 32-bit process also needs a 32-bit splitter or source filter for MP4.
 
-Install the Encoding Filters Pack before running the sample. This sample encodes VP8.
+The project is Visual Studio 2022 (`v143`), MFC in a shared DLL, Unicode, Win32 and x64. Put a license key in `kLicenseKey` in `../common/Graph.h` after purchase. An empty key runs the trial.
+
+Install the Encoding Filters Pack before running the sample.

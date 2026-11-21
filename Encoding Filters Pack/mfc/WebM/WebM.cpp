@@ -1,63 +1,37 @@
 #include "WebM.h"
 
-static const GUID kClsidConverter = { 0x3A65D681, 0x4840, 0x4077, { 0xBC, 0xA6, 0x38, 0x1F, 0x25, 0x64, 0xBE, 0xBC } };
-static const GUID kClsidVp8 = { 0x7B2B9E53, 0xF65D, 0x4967, { 0xBE, 0x13, 0x66, 0x29, 0x5E, 0x90, 0x38, 0x2E } };
-static const GUID kClsidMux = { 0x25908CCA, 0x6ED3, 0x4FC8, { 0xA3, 0x58, 0x6D, 0x30, 0x39, 0x8D, 0x15, 0xBF } };
-static const GUID kClsidVorbis = { 0xF86DC6FF, 0x66F2, 0x4B42, { 0xBE, 0x37, 0x2E, 0xFE, 0x9D, 0xD4, 0xF5, 0x49 } };
-static const GUID kI420 = { 0x30323449, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71 } };
-static const GUID kYV12 = { 0x32315659, 0x0000, 0x0010, { 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71 } };
-static const GUID kIID_Converter = { 0x25AB8F6C, 0x2CB3, 0x46A8, { 0x90, 0xE3, 0xBB, 0x2F, 0x27, 0xA9, 0x9C, 0xEA } };
-static const GUID kIID_VPX = { 0xED311152, 0x5211, 0x11DF, { 0x94, 0xAF, 0x00, 0x26, 0xB9, 0x77, 0xEE, 0xAB } };
-static const GUID kIID_Vorbis = { 0xA4C6A887, 0x7BD3, 0x4B33, { 0x9A, 0x57, 0xA3, 0xEB, 0x10, 0x92, 0x4D, 0x3A } };
+static const GUID kClsidFfmpeg =
+{ 0x69F244AB, 0x31A9, 0x4B74, { 0x81, 0xCB, 0xCF, 0x8C, 0x9F, 0xAC, 0xB2, 0xEC } };
 
-// The pack ships the WebM filters as 32-bit only, so this sample builds for Win32.
-static const GUID kIID_VP8 = { 0xED311151, 0x5211, 0x11DF, { 0x94, 0xAF, 0x00, 0x26, 0xB9, 0x77, 0xEE, 0xAA } };
+static const GUID kIidSinkSettings =
+{ 0xCAEC87C3, 0x24B5, 0x404C, { 0x99, 0x85, 0xFA, 0x18, 0xD2, 0xB7, 0x8A, 0x4A } };
 
-struct IVFVideoConverter : public IUnknown
+static const GUID kIidPinSettings =
+{ 0x496D3BA7, 0x0630, 0x499E, { 0xA7, 0x30, 0x57, 0x7D, 0x4A, 0x04, 0x9F, 0x9F } };
+
+// FFMPEG_SINK_FORMAT_WEBM.
+static const int kFormatWebM = 8;
+
+// The container is set on the filter.
+struct IFFmpegSinkSettings : public IUnknown
 {
-    virtual HRESULT STDMETHODCALLTYPE SetOutputSubtypes(const GUID* subtypes, int count) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetFormat(int format) = 0;
 };
 
-struct IVPXEncoderKind : public IUnknown
+// Each connected input pin takes the settings of its stream. Vtable order through SetAudioCodec.
+struct IFFmpegSinkPinSettings : public IUnknown
 {
-    virtual HRESULT STDMETHODCALLTYPE SetEncoderKind(int kind) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetEncoderKind(int* kind) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoCodec(int codec) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoBitRate(LONG bitRate) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoWidth(LONG width) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoHeight(LONG height) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoProfile(int profile) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoLevel(int level) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoGOPSize(LONG gopSize) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoMaxBFrames(LONG maxBFrames) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetVideoThreadCount(LONG threadCount) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetAudioCodec(int codec) = 0;
 };
-
-// Vtable order matches the filter through SetTargetBitrate. Bitrate is kilobits per second.
-struct IVP8Encoder : public IUnknown
-{
-    virtual HRESULT STDMETHODCALLTYPE ApplySettings() = 0;
-    virtual HRESULT STDMETHODCALLTYPE ResetSettings() = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetDeadline(int deadline) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetDeadline(int* deadline) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetThreadCount(int threads) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetThreadCount(int* threads) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetErrorResilient(int value) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetErrorResilient(int* value) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetDropframeThreshold(int value) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetDropframeThreshold(int* value) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetResizeAllowed(int value) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetResizeAllowed(int* value) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetResizeUpThreshold(int value) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetResizeUpThreshold(int* value) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetResizeDownThreshold(int value) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetResizeDownThreshold(int* value) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetEndUsage(int endUsage) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetEndUsage(int* endUsage) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetLagInFrames(int frames) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetLagInFrames(int* frames) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetTokenPartitions(int value) = 0;
-    virtual HRESULT STDMETHODCALLTYPE GetTokenPartitions(int* value) = 0;
-    virtual HRESULT STDMETHODCALLTYPE SetTargetBitrate(int bitrateKbps) = 0;
-};
-
-struct IVorbisEncode : public IUnknown
-{
-    virtual HRESULT STDMETHODCALLTYPE GetEncoderSettings() = 0;
-    virtual BOOL STDMETHODCALLTYPE SetQuality(int quality) = 0;
-};
-
 namespace
 {
     void EnsureParent(const wchar_t* path)
@@ -72,6 +46,71 @@ namespace
 
         *slash = L'\0';
         SHCreateDirectoryExW(NULL, directory, NULL);
+    }
+
+    struct CodecItem
+    {
+        const wchar_t* name;
+        int videoCodec;  // FFMPEG_SINK_VIDEO_CODEC
+        int audioCodec;  // FFMPEG_SINK_AUDIO_CODEC
+    };
+
+    const CodecItem kCodecs[] =
+    {
+        { L"VP8 + Vorbis", 11, 5 },
+        { L"VP9 + Opus", 12, 6 }
+    };
+
+    HRESULT ConfigurePins(IBaseFilter* encoder, const CodecItem& codecs, int videoBitrate)
+    {
+        IEnumPins* pins = NULL;
+        HRESULT hr = encoder->EnumPins(&pins);
+        if (FAILED(hr))
+        {
+            return hr;
+        }
+
+        IPin* pin = NULL;
+        while (SUCCEEDED(hr) && pins->Next(1, &pin, NULL) == S_OK)
+        {
+            PIN_DIRECTION direction;
+            AM_MEDIA_TYPE type;
+            IFFmpegSinkPinSettings* settings = NULL;
+            if (SUCCEEDED(pin->QueryDirection(&direction)) && direction == PINDIR_INPUT &&
+                pin->ConnectionMediaType(&type) == S_OK)
+            {
+                const GUID major = type.majortype;
+                CoTaskMemFree(type.pbFormat);
+                if (type.pUnk != NULL)
+                {
+                    type.pUnk->Release();
+                }
+
+                hr = pin->QueryInterface(kIidPinSettings, (void**)&settings);
+                if (SUCCEEDED(hr) && major == MEDIATYPE_Video)
+                {
+                    hr = settings->SetVideoCodec(codecs.videoCodec);
+                    if (SUCCEEDED(hr))
+                    {
+                        hr = settings->SetVideoBitRate(videoBitrate);
+                    }
+                }
+                else if (SUCCEEDED(hr) && major == MEDIATYPE_Audio)
+                {
+                    hr = settings->SetAudioCodec(codecs.audioCodec);
+                }
+
+                if (settings != NULL)
+                {
+                    settings->Release();
+                }
+            }
+
+            pin->Release();
+        }
+
+        pins->Release();
+        return hr;
     }
 }
 
@@ -109,12 +148,13 @@ BOOL CWebMDlg::OnInitDialog()
     CheckDlgButton(IDC_AUDIO, BST_CHECKED);
     SetDlgItemInt(IDC_VBITRATE, 2000, FALSE);
 
-    CComboBox* rates = (CComboBox*)GetDlgItem(IDC_RATE);
-    int vbr = rates->AddString(L"VBR");
-    rates->SetItemData(vbr, 0);
-    int cbr = rates->AddString(L"CBR");
-    rates->SetItemData(cbr, 1);
-    rates->SetCurSel(0);
+    CComboBox* codecs = (CComboBox*)GetDlgItem(IDC_CODECS);
+    for (int i = 0; i < (int)(sizeof(kCodecs) / sizeof(kCodecs[0])); ++i)
+    {
+        codecs->SetItemData(codecs->AddString(kCodecs[i].name), (DWORD_PTR)i);
+    }
+
+    codecs->SetCurSel(0);
 
     FillDevices(CLSID_VideoInputDeviceCategory, *(CComboBox*)GetDlgItem(IDC_CAMERA_DEVICE), false);
     FillDevices(CLSID_AudioInputDeviceCategory, *(CComboBox*)GetDlgItem(IDC_AUDIO_DEVICE), true);
@@ -183,86 +223,6 @@ bool CWebMDlg::Failed(HRESULT hr, const wchar_t* step)
     return true;
 }
 
-HRESULT CWebMDlg::ConnectFree(IBaseFilter* from, IBaseFilter* to)
-{
-    IEnumPins* pins = NULL;
-    HRESULT hr = from->EnumPins(&pins);
-    if (FAILED(hr))
-    {
-        return hr;
-    }
-
-    IPin* output = NULL;
-    IPin* fetched = NULL;
-    while (output == NULL && pins->Next(1, &fetched, NULL) == S_OK)
-    {
-        PIN_DIRECTION direction;
-        fetched->QueryDirection(&direction);
-        IPin* peer = NULL;
-        const HRESULT connected = fetched->ConnectedTo(&peer);
-        if (peer != NULL)
-        {
-            peer->Release();
-        }
-
-        if (direction == PINDIR_OUTPUT && connected != S_OK)
-        {
-            output = fetched;
-        }
-        else
-        {
-            fetched->Release();
-        }
-    }
-
-    pins->Release();
-    if (output == NULL)
-    {
-        return VFW_E_NOT_FOUND;
-    }
-
-    hr = to->EnumPins(&pins);
-    if (FAILED(hr))
-    {
-        output->Release();
-        return hr;
-    }
-
-    IPin* input = NULL;
-    while (input == NULL && pins->Next(1, &fetched, NULL) == S_OK)
-    {
-        PIN_DIRECTION direction;
-        fetched->QueryDirection(&direction);
-        IPin* peer = NULL;
-        const HRESULT connected = fetched->ConnectedTo(&peer);
-        if (peer != NULL)
-        {
-            peer->Release();
-        }
-
-        if (direction == PINDIR_INPUT && connected != S_OK)
-        {
-            input = fetched;
-        }
-        else
-        {
-            fetched->Release();
-        }
-    }
-
-    pins->Release();
-    if (input == NULL)
-    {
-        output->Release();
-        return VFW_E_NOT_FOUND;
-    }
-
-    hr = m_graph->Connect(output, input);
-    output->Release();
-    input->Release();
-    return hr;
-}
-
 void CWebMDlg::OnStart()
 {
     if (m_running)
@@ -315,9 +275,9 @@ void CWebMDlg::OnStart()
         return;
     }
 
-    CComboBox* rates = (CComboBox*)GetDlgItem(IDC_RATE);
-    const int endUsage = (int)rates->GetItemData(rates->GetCurSel());
-    const int bitrate = (int)GetDlgItemInt(IDC_VBITRATE, NULL, FALSE);
+    CComboBox* codecs = (CComboBox*)GetDlgItem(IDC_CODECS);
+    const CodecItem& codec = kCodecs[codecs->GetItemData(codecs->GetCurSel())];
+    const int bitrate = (int)GetDlgItemInt(IDC_VBITRATE, NULL, FALSE) * 1000;
     const bool encodeAudio = IsDlgButtonChecked(IDC_AUDIO) == BST_CHECKED;
     EnsureParent(output);
 
@@ -325,11 +285,9 @@ void CWebMDlg::OnStart()
     IBaseFilter* audioSource = NULL;
     IBaseFilter* tee = NULL;
     IBaseFilter* renderer = NULL;
-    IBaseFilter* converter = NULL;
-    IBaseFilter* vp8 = NULL;
-    IBaseFilter* vorbis = NULL;
-    IBaseFilter* mux = NULL;
-    IBaseFilter* writer = NULL;
+    IBaseFilter* encoder = NULL;
+    IFFmpegSinkSettings* sinkSettings = NULL;
+    IFileSinkFilter* sink = NULL;
 
     HRESULT hr = CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void**)&m_graph);
     if (Failed(hr, L"Create the filter graph")) goto cleanup;
@@ -370,66 +328,24 @@ void CWebMDlg::OnStart()
     if (Failed(hr, L"Add the preview tee")) goto cleanup;
     hr = AddByClsid(m_graph, CLSID_VideoRenderer, L"Preview", &renderer);
     if (Failed(hr, L"Add the preview")) goto cleanup;
-    hr = AddByClsid(m_graph, kClsidConverter, L"Video converter", &converter);
-    if (Failed(hr, L"Add the video converter. Install the Encoding Filters Pack.")) goto cleanup;
-    hr = AddByClsid(m_graph, kClsidVp8, L"VP8 encoder", &vp8);
-    if (Failed(hr, L"Add the VP8 encoder. Install the Encoding Filters Pack.")) goto cleanup;
-    hr = AddByClsid(m_graph, kClsidMux, L"WebM muxer", &mux);
-    if (Failed(hr, L"Add the WebM muxer. Install the Encoding Filters Pack.")) goto cleanup;
-    hr = AddByClsid(m_graph, CLSID_FileWriter, L"File writer", &writer);
-    if (Failed(hr, L"Add the file writer")) goto cleanup;
+    hr = AddByClsid(m_graph, kClsidFfmpeg, L"FFmpeg encoder", &encoder);
+    if (Failed(hr, L"Add the FFmpeg encoder. Install the Encoding Filters Pack.")) goto cleanup;
 
-    IVFVideoConverter* converterSettings = NULL;
-    hr = converter->QueryInterface(kIID_Converter, (void**)&converterSettings);
+    hr = encoder->QueryInterface(kIidSinkSettings, (void**)&sinkSettings);
     if (SUCCEEDED(hr))
     {
-        const GUID subtypes[2] = { kI420, kYV12 };
-        hr = converterSettings->SetOutputSubtypes(subtypes, 2);
-        converterSettings->Release();
+        hr = sinkSettings->SetFormat(kFormatWebM);
+        sinkSettings->Release();
     }
-    if (Failed(hr, L"Set I420 output")) goto cleanup;
+    if (Failed(hr, L"Set the WebM container")) goto cleanup;
 
-    IVPXEncoderKind* kind = NULL;
-    if (SUCCEEDED(vp8->QueryInterface(kIID_VPX, (void**)&kind)) && kind != NULL)
-    {
-        kind->SetEncoderKind(0);
-        kind->Release();
-    }
-
-    IVP8Encoder* encoder = NULL;
-    hr = vp8->QueryInterface(kIID_VP8, (void**)&encoder);
-    if (Failed(hr, L"Get the VP8 encoder interface")) goto cleanup;
-    SYSTEM_INFO info;
-    GetSystemInfo(&info);
-    hr = encoder->SetThreadCount((int)info.dwNumberOfProcessors);
-    if (SUCCEEDED(hr)) hr = encoder->SetDeadline(fileSource ? 0 : 1);
-    if (SUCCEEDED(hr)) hr = encoder->SetEndUsage(endUsage);
-    if (SUCCEEDED(hr) && !fileSource) hr = encoder->SetLagInFrames(0);
-    if (SUCCEEDED(hr)) hr = encoder->SetTargetBitrate(bitrate);
-    encoder->Release();
-    if (Failed(hr, L"Set the VP8 bitrate")) goto cleanup;
-
-    if (encodeAudio)
-    {
-        hr = AddByClsid(m_graph, kClsidVorbis, L"Vorbis encoder", &vorbis);
-        if (Failed(hr, L"Add the Vorbis encoder. Install the Encoding Filters Pack.")) goto cleanup;
-        IVorbisEncode* vorbisSettings = NULL;
-        if (SUCCEEDED(vorbis->QueryInterface(kIID_Vorbis, (void**)&vorbisSettings)) && vorbisSettings != NULL)
-        {
-            vorbisSettings->SetQuality(80);
-            vorbisSettings->Release();
-        }
-    }
-
-    IFileSinkFilter* sink = NULL;
-    hr = writer->QueryInterface(IID_IFileSinkFilter, (void**)&sink);
+    hr = encoder->QueryInterface(IID_IFileSinkFilter, (void**)&sink);
     if (SUCCEEDED(hr))
     {
         hr = sink->SetFileName(output, NULL);
         sink->Release();
     }
     if (Failed(hr, L"Set the output path")) goto cleanup;
-
     hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, source, NULL, tee);
     if (Failed(hr, L"Connect the source to the tee")) goto cleanup;
     hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, tee, NULL, renderer);
@@ -446,12 +362,8 @@ void CWebMDlg::OnStart()
     m_window->SetWindowPosition(0, 0, previewRect.right, previewRect.bottom);
     m_window->put_Visible(OATRUE);
 
-    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, tee, converter, vp8);
-    if (Failed(hr, L"Connect VP8")) goto cleanup;
-    hr = ConnectFree(vp8, mux);
-    if (Failed(hr, L"Connect VP8 to the muxer")) goto cleanup;
-    hr = ConnectFree(mux, writer);
-    if (Failed(hr, L"Connect the muxer to the file writer")) goto cleanup;
+    hr = m_capture->RenderStream(NULL, &MEDIATYPE_Video, tee, NULL, encoder);
+    if (Failed(hr, L"Connect the encoder")) goto cleanup;
 
     if (encodeAudio)
     {
@@ -462,9 +374,13 @@ void CWebMDlg::OnStart()
             goto cleanup;
         }
 
-        hr = m_capture->RenderStream(NULL, &MEDIATYPE_Audio, audioSource, vorbis, mux);
-        if (Failed(hr, L"Connect Vorbis")) goto cleanup;
+        hr = m_capture->RenderStream(NULL, &MEDIATYPE_Audio, audioSource, NULL, encoder);
+        if (Failed(hr, L"Connect audio")) goto cleanup;
     }
+
+    // The encoder creates a pin per connection; each pin takes the settings of its stream.
+    hr = ConfigurePins(encoder, codec, bitrate);
+    if (Failed(hr, L"Set the stream settings")) goto cleanup;
 
     if (fileSource)
     {
@@ -490,11 +406,8 @@ cleanup:
     ReleaseFilter(&audioSource);
     ReleaseFilter(&tee);
     ReleaseFilter(&renderer);
-    ReleaseFilter(&converter);
-    ReleaseFilter(&vp8);
-    ReleaseFilter(&vorbis);
-    ReleaseFilter(&mux);
-    ReleaseFilter(&writer);
+    ReleaseFilter(&encoder);
+
 }
 
 void CWebMDlg::OnStop()

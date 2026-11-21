@@ -5,27 +5,31 @@ using VisioForge.DirectShowLib;
 
 namespace VisioForge.Samples.WebM
 {
-    internal sealed class EndUsageChoice
+    internal sealed class CodecChoice
     {
-        public EndUsageChoice(string caption, int value)
+        public CodecChoice(string caption, int videoCodec, int audioCodec)
         {
             Caption = caption;
-            Value = value;
+            VideoCodec = videoCodec;
+            AudioCodec = audioCodec;
         }
 
         public string Caption { get; private set; }
 
-        public int Value { get; private set; }
+        // FFMPEG_SINK_VIDEO_CODEC value.
+        public int VideoCodec { get; private set; }
+
+        // FFMPEG_SINK_AUDIO_CODEC value.
+        public int AudioCodec { get; private set; }
 
         public override string ToString()
         {
             return Caption;
         }
     }
-
     /// <summary>
-    /// File or camera to VP8 + Vorbis in a WebM file.
-    /// The muxer writes through a separate File Writer.
+    /// FFmpeg encoder writing WebM. The container is set on the filter, the codecs and the video bitrate
+    /// on each connected input pin. The video bitrate is bits per second.
     /// </summary>
     internal sealed class Session
     {
@@ -33,13 +37,7 @@ namespace VisioForge.Samples.WebM
 
         private const string LicenseKey = "";
 
-        private static readonly Guid ClsidVideoConverter = new Guid("3A65D681-4840-4077-BCA6-381F2564BEBC");
-        private static readonly Guid I420 = new Guid("30323449-0000-0010-8000-00AA00389B71");
-        private static readonly Guid YV12 = new Guid("32315659-0000-0010-8000-00AA00389B71");
-
-        private const int DeadlineBestQuality = 0;
-        private const int DeadlineRealtime = 1;
-        private const int EncoderKindVp8 = 0;
+        private const int FormatWebM = 8; // FFMPEG_SINK_FORMAT_WEBM
 
         private IFilterGraph2 _graph;
         private ICaptureGraphBuilder2 _capture;
@@ -59,8 +57,8 @@ namespace VisioForge.Samples.WebM
             string sourceFile,
             DsDevice videoDevice,
             DsDevice audioDevice,
+            CodecChoice codecs,
             int videoBitrateKbps,
-            int endUsage,
             bool encodeAudio,
             string outputPath)
         {
@@ -83,7 +81,7 @@ namespace VisioForge.Samples.WebM
             {
                 _source = BindDevice(videoDevice);
                 Check(_graph.AddFilter(_source, videoDevice.Name), "Add camera");
-                if (audioDevice != null)
+                if (audioDevice != null && encodeAudio)
                 {
                     _audioSource = BindDevice(audioDevice);
                     _ownAudioSource = true;
@@ -93,30 +91,16 @@ namespace VisioForge.Samples.WebM
 
             var tee = Add((IBaseFilter)new InfTee(), "Preview tee");
             var renderer = Add((IBaseFilter)new VideoRenderer(), "Preview");
-            var converter = AddFromClsid(ClsidVideoConverter, "Video converter");
-            var vp8 = AddFromClsid(DSFilterInitInfoConsts.VFWebMVP8Encoder.CLSID, "VP8 encoder");
-            var mux = AddFromClsid(DSFilterInitInfoConsts.VFWebmMuxer.CLSID, "WebM muxer");
-            var writer = Add((IBaseFilter)new FileWriter(), "File writer");
-            ApplyLicense(vp8);
-            ApplyLicense(mux);
-            ConfigureConverter(converter);
-            ConfigureVp8(vp8, videoBitrateKbps, endUsage, fileSource);
-
-            var sink = writer as IFileSinkFilter;
+            var encoder = AddFromClsid(DSFilterInitInfoConsts.VFFFMPEGEncoder.CLSID, "FFmpeg encoder");
+            ApplyLicense(encoder);
+            var sink = encoder as IFFmpegSinkSettings;
             if (sink == null)
             {
-                throw new InvalidOperationException("The file writer has no file sink.");
+                throw new InvalidOperationException("The FFmpeg encoder has no configuration interface.");
             }
 
-            Check(sink.SetFileName(outputPath, null), "Set output path");
-
-            IBaseFilter vorbis = null;
-            if (encodeAudio)
-            {
-                vorbis = AddFromClsid(DSFilterInitInfoConsts.VFWebMVorbisEncoder.CLSID, "Vorbis encoder");
-                ApplyLicense(vorbis);
-                ConfigureVorbis(vorbis);
-            }
+            Check(sink.SetFormat(FormatWebM), "Set container");
+            Check(((IFileSinkFilter)encoder).SetFileName(outputPath, null), "Set output path");
 
             _window = (IVideoWindow)renderer;
 
@@ -129,9 +113,7 @@ namespace VisioForge.Samples.WebM
             PlacePreview(previewWidth, previewHeight);
             Check(_window.put_Visible(OABool.True), "Show preview");
 
-            Check(_capture.RenderStream(null, MediaType.Video, tee, converter, vp8), "Connect VP8");
-            ConnectFirstFree(_graph, vp8, mux, "Connect VP8 to the muxer");
-            ConnectFirstFree(_graph, mux, writer, "Connect the muxer to the file writer");
+            Check(_capture.RenderStream(null, MediaType.Video, tee, null, encoder), "Connect encoder");
 
             if (encodeAudio)
             {
@@ -140,8 +122,11 @@ namespace VisioForge.Samples.WebM
                     throw new InvalidOperationException("Select an audio device, or turn audio off.");
                 }
 
-                Check(_capture.RenderStream(null, MediaType.Audio, _audioSource, vorbis, mux), "Connect Vorbis");
+                Check(_capture.RenderStream(null, MediaType.Audio, _audioSource, null, encoder), "Connect audio");
             }
+
+            // The encoder creates a pin per connection; each pin takes the settings of its stream.
+            ConfigurePins(encoder, codecs, videoBitrateKbps * 1000);
 
             if (fileSource)
             {
@@ -240,53 +225,41 @@ namespace VisioForge.Samples.WebM
             }
         }
 
-        private static void ConfigureConverter(IBaseFilter converter)
+        private static void ConfigurePins(IBaseFilter encoder, CodecChoice codecs, int videoBitrate)
         {
-            var settings = converter as IVFVideoConverter;
-            if (settings == null)
+            for (var index = 0; ; index++)
             {
-                throw new InvalidOperationException("The video converter has no settings interface.");
-            }
+                var pin = DsFindPin.ByDirection(encoder, PinDirection.Input, index);
+                if (pin == null)
+                {
+                    return;
+                }
 
-            Check(settings.SetOutputSubtypes(new[] { I420, YV12 }, 2), "Set I420 output");
-        }
+                try
+                {
+                    var type = new AMMediaType();
+                    if (pin.ConnectionMediaType(type) != 0)
+                    {
+                        continue;
+                    }
 
-        private static void ConfigureVp8(IBaseFilter filter, int videoBitrateKbps, int endUsage, bool fileSource)
-        {
-            var kind = filter as IVPXEncoderKind;
-            if (kind != null)
-            {
-                Check(kind.SetEncoderKind(EncoderKindVp8), "Select VP8");
-            }
-
-            var encoder = filter as IVP8Encoder;
-            if (encoder == null)
-            {
-                throw new InvalidOperationException("The VP8 encoder has no IVP8Encoder interface.");
-            }
-
-            Check(encoder.SetThreadCount(Environment.ProcessorCount), "Set VP8 threads");
-            Check(encoder.SetDeadline(fileSource ? DeadlineBestQuality : DeadlineRealtime), "Set VP8 deadline");
-            Check(encoder.SetEndUsage(endUsage), "Set VP8 rate mode");
-            if (!fileSource)
-            {
-                Check(encoder.SetLagInFrames(0), "Set VP8 lag");
-            }
-
-            Check(encoder.SetTargetBitrate(videoBitrateKbps), "Set VP8 bitrate");
-        }
-
-        private static void ConfigureVorbis(IBaseFilter filter)
-        {
-            var encoder = filter as IVorbisEncode;
-            if (encoder == null)
-            {
-                return;
-            }
-
-            if (!encoder.SetQuality(80))
-            {
-                throw new InvalidOperationException("Set Vorbis quality failed.");
+                    var major = type.majorType;
+                    DsUtils.FreeAMMediaType(type);
+                    var settings = (IFFmpegSinkPinSettings)pin;
+                    if (major == MediaType.Video)
+                    {
+                        Check(settings.SetVideoCodec(codecs.VideoCodec), "Set video codec");
+                        Check(settings.SetVideoBitRate(videoBitrate), "Set video bitrate");
+                    }
+                    else if (major == MediaType.Audio)
+                    {
+                        Check(settings.SetAudioCodec(codecs.AudioCodec), "Set audio codec");
+                    }
+                }
+                finally
+                {
+                    Marshal.ReleaseComObject(pin);
+                }
             }
         }
 
@@ -318,61 +291,6 @@ namespace VisioForge.Samples.WebM
             }
 
             return filter;
-        }
-
-        private static void ConnectFirstFree(IFilterGraph2 graph, IBaseFilter from, IBaseFilter to, string step)
-        {
-            var output = FirstUnconnected(from, PinDirection.Output);
-            var input = FirstUnconnected(to, PinDirection.Input);
-            if (output == null || input == null)
-            {
-                throw new InvalidOperationException(step + " failed. A pin is missing.");
-            }
-
-            try
-            {
-                Check(graph.Connect(output, input), step);
-            }
-            finally
-            {
-                Marshal.ReleaseComObject(output);
-                Marshal.ReleaseComObject(input);
-            }
-        }
-
-        private static IPin FirstUnconnected(IBaseFilter filter, PinDirection direction)
-        {
-            IEnumPins pins;
-            filter.EnumPins(out pins);
-            if (pins == null)
-            {
-                return null;
-            }
-
-            var fetched = new IPin[1];
-            IPin found = null;
-            while (pins.Next(1, fetched, IntPtr.Zero) == 0)
-            {
-                PinDirection pinDirection;
-                fetched[0].QueryDirection(out pinDirection);
-                IPin peer;
-                var connected = fetched[0].ConnectedTo(out peer);
-                if (peer != null)
-                {
-                    Marshal.ReleaseComObject(peer);
-                }
-
-                if (pinDirection == direction && connected != 0)
-                {
-                    found = fetched[0];
-                    break;
-                }
-
-                Marshal.ReleaseComObject(fetched[0]);
-            }
-
-            Marshal.ReleaseComObject(pins);
-            return found;
         }
 
         private static void ApplyLicense(IBaseFilter filter)
@@ -423,114 +341,50 @@ namespace VisioForge.Samples.WebM
     }
 
     [ComImport]
-    [Guid("25AB8F6C-2CB3-46A8-90E3-BB2F27A99CEA")]
+    [Guid("CAEC87C3-24B5-404C-9985-FA18D2B78A4A")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    internal interface IVFVideoConverter
+    internal interface IFFmpegSinkSettings
     {
         [PreserveSig]
-        int SetOutputSubtypes([In, MarshalAs(UnmanagedType.LPArray, SizeParamIndex = 1)] Guid[] subtypes, int count);
+        int SetFormat(int format);
     }
 
     /// <summary>
-    /// 32-bit VP8 encoder: the pack ships the WebM filters as 32-bit only.
-    /// Methods stay in vtable order through SetTargetBitrate. SetTargetBitrate is kilobits per second.
+    /// Methods stay in vtable order through SetAudioCodec.
     /// </summary>
     [ComImport]
-    [Guid("ED311151-5211-11DF-94AF-0026B977EEAA")]
+    [Guid("496D3BA7-0630-499E-A730-577D4A049F9F")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    internal interface IVP8Encoder
+    internal interface IFFmpegSinkPinSettings
     {
         [PreserveSig]
-        int ApplySettings();
+        int SetVideoCodec(int codec);
 
         [PreserveSig]
-        int ResetSettings();
+        int SetVideoBitRate(int bitRate);
 
         [PreserveSig]
-        int SetDeadline(int deadline);
+        int SetVideoWidth(int width);
 
         [PreserveSig]
-        int GetDeadline(out int deadline);
+        int SetVideoHeight(int height);
 
         [PreserveSig]
-        int SetThreadCount(int threads);
+        int SetVideoProfile(int profile);
 
         [PreserveSig]
-        int GetThreadCount(out int threads);
+        int SetVideoLevel(int level);
 
         [PreserveSig]
-        int SetErrorResilient(int value);
+        int SetVideoGOPSize(int gopSize);
 
         [PreserveSig]
-        int GetErrorResilient(out int value);
+        int SetVideoMaxBFrames(int maxBFrames);
 
         [PreserveSig]
-        int SetDropframeThreshold(int value);
+        int SetVideoThreadCount(int threadCount);
 
         [PreserveSig]
-        int GetDropframeThreshold(out int value);
-
-        [PreserveSig]
-        int SetResizeAllowed(int value);
-
-        [PreserveSig]
-        int GetResizeAllowed(out int value);
-
-        [PreserveSig]
-        int SetResizeUpThreshold(int value);
-
-        [PreserveSig]
-        int GetResizeUpThreshold(out int value);
-
-        [PreserveSig]
-        int SetResizeDownThreshold(int value);
-
-        [PreserveSig]
-        int GetResizeDownThreshold(out int value);
-
-        [PreserveSig]
-        int SetEndUsage(int endUsage);
-
-        [PreserveSig]
-        int GetEndUsage(out int endUsage);
-
-        [PreserveSig]
-        int SetLagInFrames(int frames);
-
-        [PreserveSig]
-        int GetLagInFrames(out int frames);
-
-        [PreserveSig]
-        int SetTokenPartitions(int value);
-
-        [PreserveSig]
-        int GetTokenPartitions(out int value);
-
-        [PreserveSig]
-        int SetTargetBitrate(int bitrateKbps);
-    }
-
-    [ComImport]
-    [Guid("ED311152-5211-11DF-94AF-0026B977EEAB")]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    internal interface IVPXEncoderKind
-    {
-        [PreserveSig]
-        int SetEncoderKind(int kind);
-
-        [PreserveSig]
-        int GetEncoderKind(out int kind);
-    }
-
-    [ComImport]
-    [Guid("A4C6A887-7BD3-4B33-9A57-A3EB10924D3A")]
-    [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    internal interface IVorbisEncode
-    {
-        [PreserveSig]
-        int GetEncoderSettings();
-
-        [PreserveSig]
-        bool SetQuality(int quality);
+        int SetAudioCodec(int codec);
     }
 }

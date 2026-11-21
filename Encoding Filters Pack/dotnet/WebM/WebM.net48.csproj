@@ -4,7 +4,7 @@
     <TargetFramework>net48</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-    <PlatformTarget>x86</PlatformTarget>
+    <Platforms>x64;x86</Platforms>
     <ApplicationIcon>visioforge_main_icon.ico</ApplicationIcon>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>

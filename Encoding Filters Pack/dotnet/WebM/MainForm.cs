@@ -15,7 +15,7 @@ namespace VisioForge.Samples.WebM
         private readonly ComboBox _cameras = new ComboBox();
         private readonly ComboBox _audioDevices = new ComboBox();
         private readonly NumericUpDown _videoBitrate = new NumericUpDown();
-        private readonly ComboBox _endUsage = new ComboBox();
+        private readonly ComboBox _codecs = new ComboBox();
         private readonly CheckBox _encodeAudio = new CheckBox();
         private readonly TextBox _output = new TextBox();
         private readonly Button _browseOutput = new Button();
@@ -87,23 +87,25 @@ namespace VisioForge.Samples.WebM
             _audioDevices.SetBounds(16, 142, 294, 24);
 
             var bitrateLabel = new Label();
-            bitrateLabel.Text = "VP8 bitrate (kbps)";
+            bitrateLabel.Text = "Video bitrate (kbps)";
             bitrateLabel.SetBounds(16, 176, 150, 20);
             _videoBitrate.Minimum = 100;
             _videoBitrate.Maximum = 100000;
             _videoBitrate.Value = 2000;
             _videoBitrate.SetBounds(170, 172, 140, 24);
 
-            var usageLabel = new Label();
-            usageLabel.Text = "Rate mode";
-            usageLabel.SetBounds(16, 206, 140, 20);
-            _endUsage.DropDownStyle = ComboBoxStyle.DropDownList;
-            _endUsage.Items.Add(new EndUsageChoice("VBR", 0));
-            _endUsage.Items.Add(new EndUsageChoice("CBR", 1));
-            _endUsage.SelectedIndex = 0;
-            _endUsage.SetBounds(16, 226, 294, 24);
+            var codecLabel = new Label();
+            codecLabel.Text = "Codecs";
+            codecLabel.SetBounds(16, 206, 140, 20);
+            _codecs.DropDownStyle = ComboBoxStyle.DropDownList;
 
-            _encodeAudio.Text = "Vorbis audio";
+            // FFMPEG_SINK_VIDEO_CODEC VP8 11, VP9 12; FFMPEG_SINK_AUDIO_CODEC VORBIS 5, OPUS 6.
+            _codecs.Items.Add(new CodecChoice("VP8 + Vorbis", 11, 5));
+            _codecs.Items.Add(new CodecChoice("VP9 + Opus", 12, 6));
+            _codecs.SelectedIndex = 0;
+            _codecs.SetBounds(16, 226, 294, 24);
+
+            _encodeAudio.Text = "Audio";
             _encodeAudio.Checked = true;
             _encodeAudio.SetBounds(16, 264, 160, 24);
 
@@ -130,7 +132,7 @@ namespace VisioForge.Samples.WebM
             options.Controls.AddRange(new Control[]
             {
                 _fileSource, _cameraSource, _sourceFile, _browseSource, _cameras,
-                audioLabel, _audioDevices, bitrateLabel, _videoBitrate, usageLabel, _endUsage,
+                audioLabel, _audioDevices, bitrateLabel, _videoBitrate, codecLabel, _codecs,
                 _encodeAudio, outputLabel, _output, _browseOutput, _start, _stop, _status
             });
 
@@ -243,7 +245,7 @@ namespace VisioForge.Samples.WebM
                     return;
                 }
 
-                var usage = (EndUsageChoice)_endUsage.SelectedItem;
+
                 _running = true;
                 _session.Start(
                     Handle,
@@ -254,8 +256,8 @@ namespace VisioForge.Samples.WebM
                     _sourceFile.Text,
                     video,
                     audio,
+                    (CodecChoice)_codecs.SelectedItem,
                     (int)_videoBitrate.Value,
-                    usage.Value,
                     _encodeAudio.Checked,
                     output);
 

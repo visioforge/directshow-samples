@@ -30,7 +30,6 @@ private:
     void StopGraph();
     void UpdateSourceMode();
     bool Failed(HRESULT hr, const wchar_t* step);
-    HRESULT ConnectFree(IBaseFilter* from, IBaseFilter* to);
 
     IGraphBuilder* m_graph;
     ICaptureGraphBuilder2* m_capture;
