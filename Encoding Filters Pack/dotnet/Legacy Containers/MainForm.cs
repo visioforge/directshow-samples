@@ -36,6 +36,7 @@ namespace VisioForge.Samples.LegacyContainers
 
         public MainForm()
         {
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             Text = "Encoding Filters Pack — legacy containers";
             ClientSize = new Size(980, 560);
             StartPosition = FormStartPosition.CenterScreen;

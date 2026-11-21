@@ -34,6 +34,7 @@ namespace VisioForge.Samples.FileEncode
 
         public MainForm()
         {
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             Text = "Encoding Filters Pack — file encode";
             ClientSize = new Size(980, 560);
             StartPosition = FormStartPosition.CenterScreen;

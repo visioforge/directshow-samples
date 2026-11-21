@@ -93,6 +93,9 @@ CRtspDlg::CRtspDlg()
 BOOL CRtspDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
+    HICON icon = AfxGetApp()->LoadIcon(IDI_ICON);
+    SetIcon(icon, TRUE);
+    SetIcon(icon, FALSE);
     CheckDlgButton(IDC_FILE, BST_CHECKED);
     CheckDlgButton(IDC_AUDIO, BST_CHECKED);
     SetDlgItemInt(IDC_VBITRATE, 4000, FALSE);

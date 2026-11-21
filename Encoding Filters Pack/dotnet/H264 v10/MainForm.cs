@@ -30,6 +30,7 @@ namespace VisioForge.Samples.H264V10
 
         public MainForm()
         {
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             Text = "Encoding Filters Pack — H.264 v10";
             ClientSize = new Size(980, 560);
             StartPosition = FormStartPosition.CenterScreen;
@@ -60,7 +61,7 @@ namespace VisioForge.Samples.H264V10
         private void BuildUi()
         {
             var options = new GroupBox();
-            options.Text = "Record";
+            options.Text = "Encode";
             options.SetBounds(8, 8, 360, 544);
 
             _fileSource.Text = "File";

@@ -1,6 +1,8 @@
 #include "resource.h"
 #include <afxres.h>
 
+IDI_ICON ICON "visioforge_main_icon.ico"
+
 IDD_FILE_ENCODE DIALOGEX 0, 0, 520, 280
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Encoding Filters Pack - file encode"

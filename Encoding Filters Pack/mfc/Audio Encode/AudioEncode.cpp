@@ -131,6 +131,9 @@ CAudioEncodeDlg::CAudioEncodeDlg()
 BOOL CAudioEncodeDlg::OnInitDialog()
 {
     CDialogEx::OnInitDialog();
+    HICON icon = AfxGetApp()->LoadIcon(IDI_ICON);
+    SetIcon(icon, TRUE);
+    SetIcon(icon, FALSE);
     CheckDlgButton(IDC_FILE, BST_CHECKED);
     SetDlgItemInt(IDC_BITRATE, 128, FALSE);
 

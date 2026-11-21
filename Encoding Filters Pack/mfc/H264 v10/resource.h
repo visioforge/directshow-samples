@@ -1,6 +1,7 @@
 #pragma once
 
 #define IDD_H264V10 101
+#define IDI_ICON 102
 #define IDC_FILE 1001
 #define IDC_CAMERA 1002
 #define IDC_SOURCE 1003

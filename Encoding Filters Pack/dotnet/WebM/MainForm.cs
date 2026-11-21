@@ -30,6 +30,7 @@ namespace VisioForge.Samples.WebM
 
         public MainForm()
         {
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             Text = "Encoding Filters Pack — WebM";
             ClientSize = new Size(980, 560);
             StartPosition = FormStartPosition.CenterScreen;

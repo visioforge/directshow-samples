@@ -27,6 +27,7 @@ namespace VisioForge.Samples.AudioEncode
 
         public MainForm()
         {
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
             Text = "Encoding Filters Pack — audio";
             ClientSize = new Size(420, 360);
             StartPosition = FormStartPosition.CenterScreen;
