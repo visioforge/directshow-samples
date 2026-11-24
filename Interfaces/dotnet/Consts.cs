@@ -129,6 +129,11 @@ namespace VisioForge.DirectShowAPI
         public static readonly Guid CLSID_VFFFMPEGSource = new Guid("C5255DE3-50A7-4714-B763-D99E96E4CD52");
 
         /// <summary>
+        /// FFMPEG video decoder filter CLSID (in the same .ax file as the FFMPEG source filter).
+        /// </summary>
+        public static readonly Guid CLSID_VFFFMPEGVideoDecoder = new Guid("934BBFAE-DE28-46C9-A2EC-85C84A1992BA");
+
+        /// <summary>
         /// VLC source filter CLSID.
         /// </summary>
         public static readonly Guid CLSID_VFVLCSource = new Guid("3FC97748-7CB6-4195-89DE-0717582A4863");
