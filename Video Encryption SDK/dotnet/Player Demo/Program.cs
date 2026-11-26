@@ -14,6 +14,8 @@ namespace Player_Demo
         [STAThread]
         static void Main()
         {
+            // VMR-9 draws nothing in a window Windows stretches for a monitor with another DPI: scale per monitor.
+            Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());

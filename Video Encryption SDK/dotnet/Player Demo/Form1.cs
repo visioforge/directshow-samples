@@ -146,6 +146,39 @@ namespace Player_Demo
             return 0;
         }
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr MonitorFromWindow(IntPtr hwnd, int dwFlags);
+
+        /// <summary>
+        /// Makes VMR-9 render on the monitor that shows the window. Must be called before the renderer is connected.
+        /// </summary>
+        private static int SelectWindowMonitor(IVMRMonitorConfig9 monitorConfig, IntPtr window)
+        {
+            if (monitorConfig == null)
+            {
+                return 0;
+            }
+
+            var monitors = new VMR9MonitorInfo[16];
+            int hr = monitorConfig.GetAvailableMonitors(monitors, monitors.Length, out int count);
+            if (hr < 0)
+            {
+                return hr;
+            }
+
+            const int MONITOR_DEFAULTTONEAREST = 2;
+            IntPtr windowMonitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
+            for (int i = 0; i < count; i++)
+            {
+                if (monitors[i].hMon == windowMonitor)
+                {
+                    return monitorConfig.SetMonitor(monitors[i].uDevID);
+                }
+            }
+
+            return 0;
+        }
+
         private void CreateGraph()
         {
             filterGraph = (IFilterGraph2)new FilterGraph();
@@ -204,6 +237,11 @@ namespace Player_Demo
             IVMRWindowlessControl9 vmrWindowlessControl = videoRenderer as IVMRWindowlessControl9;
 
             vmrWindowlessControl?.SetVideoClippingWindow(pnScreen.Handle);
+
+            // VMR-9 opens its Direct3D device on the primary monitor. On a window on another monitor the graph
+            // then rebuilds the renderer while playing, which can hang it; open the device on the window's monitor.
+            hr = SelectWindowMonitor(videoRenderer as IVMRMonitorConfig9, pnScreen.Handle);
+            DsError.ThrowExceptionForHR(hr);
 
             hr = captureGraph.RenderStream(null, null, source, null, decryptor);
             DsError.ThrowExceptionForHR(hr);
